@@ -366,7 +366,6 @@ trainer = Trainer(
     train_dataset=tokenized_dataset,
     data_collator=data_collator,
     callbacks=callbacks,
-    tokenizer=tokenizer,
 )
 
 train_result = trainer.train()
