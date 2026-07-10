@@ -29,7 +29,7 @@ subprocess.check_call([
     "transformers>=4.51",
     "bitsandbytes>=0.43",
     "peft>=0.14",
-    "trl>=0.16",
+    "trl>=0.12,<0.16",
     "accelerate>=1.2",
     "datasets",
     "scipy",
@@ -85,6 +85,18 @@ from transformers import (
     TrainingArguments,
 )
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
+
+# Workaround for TRL >= 0.16 chunked-CE + PEFT compat bug
+import trl.trainer.sft_trainer as _sft_module
+if hasattr(_sft_module, "_patch_chunked_ce_lm_head"):
+    _orig_patch = _sft_module._patch_chunked_ce_lm_head
+    def _safe_patch(model, **kwargs):
+        try:
+            _orig_patch(model, **kwargs)
+        except AttributeError:
+            pass
+    _sft_module._patch_chunked_ce_lm_head = _safe_patch
+
 from trl import SFTTrainer
 
 MODEL_NAME = "Qwen/Qwen3-8B"
