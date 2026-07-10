@@ -26,6 +26,11 @@ Thumbs.db
 *.secret
 hf_token.txt
 token.txt
+.env
+*.log
+
+# Judge logs (contains prompt data, not committed until release)
+eval/judge_log.jsonl
 
 # Kaggle temp dirs
 /tmp/
