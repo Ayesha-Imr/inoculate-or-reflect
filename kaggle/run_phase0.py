@@ -315,10 +315,10 @@ def tokenize_function(examples):
     tokenized = tokenizer(
         examples["text"],
         truncation=True,
-        max_length=512,
-        padding=False,
+        padding="max_length",
+        max_length=128,
     )
-    tokenized["labels"] = tokenized["input_ids"].copy()
+    tokenized["labels"] = [ids for ids in tokenized["input_ids"]]
     return tokenized
 
 tokenized_dataset = dataset.map(tokenize_function, batched=True, remove_columns=["text"])
@@ -327,7 +327,6 @@ tokenized_dataset = dataset.map(tokenize_function, batched=True, remove_columns=
 data_collator = DataCollatorForLanguageModeling(
     tokenizer=tokenizer,
     mlm=False,
-    pad_to_multiple_of=8,
 )
 
 training_args = TrainingArguments(
