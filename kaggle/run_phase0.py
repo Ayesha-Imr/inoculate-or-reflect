@@ -29,7 +29,6 @@ subprocess.check_call([
     "transformers>=4.51",
     "bitsandbytes>=0.43",
     "peft>=0.14",
-    "trl>=0.12,<0.16",
     "accelerate>=1.2",
     "datasets",
     "scipy",
@@ -83,21 +82,10 @@ from transformers import (
     AutoTokenizer,
     BitsAndBytesConfig,
     TrainingArguments,
+    Trainer,
+    DataCollatorForLanguageModeling,
 )
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
-
-# Workaround for TRL >= 0.16 chunked-CE + PEFT compat bug
-import trl.trainer.sft_trainer as _sft_module
-if hasattr(_sft_module, "_patch_chunked_ce_lm_head"):
-    _orig_patch = _sft_module._patch_chunked_ce_lm_head
-    def _safe_patch(model, **kwargs):
-        try:
-            _orig_patch(model, **kwargs)
-        except AttributeError:
-            pass
-    _sft_module._patch_chunked_ce_lm_head = _safe_patch
-
-from trl import SFTTrainer
 
 MODEL_NAME = "Qwen/Qwen3-8B"
 
@@ -322,6 +310,26 @@ for i in range(16):
 
 dataset = Dataset.from_list(smoke_data)
 
+# Tokenize dataset (SFTTrainer normally does this automatically)
+def tokenize_function(examples):
+    tokenized = tokenizer(
+        examples["text"],
+        truncation=True,
+        max_length=512,
+        padding=False,
+    )
+    tokenized["labels"] = tokenized["input_ids"].copy()
+    return tokenized
+
+tokenized_dataset = dataset.map(tokenize_function, batched=True, remove_columns=["text"])
+
+# Data collator for causal LM (pads and creates labels)
+data_collator = DataCollatorForLanguageModeling(
+    tokenizer=tokenizer,
+    mlm=False,
+    pad_to_multiple_of=8,
+)
+
 training_args = TrainingArguments(
     output_dir=os.path.join(OUTPUT_DIR, "smoke_checkpoint"),
     per_device_train_batch_size=2,
@@ -333,8 +341,6 @@ training_args = TrainingArguments(
     save_strategy="no",
     report_to="none",
     remove_unused_columns=False,
-    push_to_hub=False,
-    push_to_hub_token=None,
 )
 
 # Try to attach Safety Compass callback
@@ -354,16 +360,13 @@ if monitor is not None:
 else:
     print("Monitor not available — training without drift callback")
 
-import inspect
-sft_params = inspect.signature(SFTTrainer.__init__).parameters
-tokenizer_kwarg = "processing_class" if "processing_class" in sft_params else "tokenizer"
-
-trainer = SFTTrainer(
+trainer = Trainer(
     model=model,
     args=training_args,
-    train_dataset=dataset,
+    train_dataset=tokenized_dataset,
+    data_collator=data_collator,
     callbacks=callbacks,
-    **{tokenizer_kwarg: tokenizer},
+    tokenizer=tokenizer,
 )
 
 train_result = trainer.train()
