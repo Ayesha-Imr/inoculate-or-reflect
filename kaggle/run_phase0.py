@@ -333,6 +333,8 @@ training_args = TrainingArguments(
     save_strategy="no",
     report_to="none",
     remove_unused_columns=False,
+    push_to_hub=False,
+    push_to_hub_token=None,
 )
 
 # Try to attach Safety Compass callback
