@@ -22,6 +22,13 @@ PHASES = {
         "code_file": "run_phase0.py",
         "source_dir": "kaggle",
     },
+    "phase1_reflections": {
+        "kernel_slug": "ior-phase1-reflections",
+        "code_file": "run_phase1_reflections.py",
+        "source_dir": "kaggle",
+        # {username} is resolved at prepare time
+        "extra_datasets": ["{username}/ior-phase1-contexts"],
+    },
 }
 
 OUTPUT_BASE = "/tmp/ior-kaggle-kernels"
@@ -57,9 +64,9 @@ def get_kaggle_username():
 
 
 def resolve_token_dataset(hf_token_dataset, username):
-    """Resolve 'auto' to {username}/safety-compass-hf-token."""
+    """Resolve 'auto' to {username}/nsa-hf-token (the actual token dataset)."""
     if hf_token_dataset == "auto":
-        return f"{username}/safety-compass-hf-token"
+        return f"{username}/nsa-hf-token"
     return hf_token_dataset
 
 
@@ -83,6 +90,8 @@ def prepare_phase(phase_name, username, hf_token_dataset):
     dataset_sources = []
     if hf_token_dataset:
         dataset_sources.append(hf_token_dataset)
+    for extra in phase.get("extra_datasets", []):
+        dataset_sources.append(extra.format(username=username))
 
     metadata = {
         "id": f"{username}/{phase['kernel_slug']}",
