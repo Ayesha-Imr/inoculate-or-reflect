@@ -1,0 +1,9 @@
+model_name: Qwen/Qwen3-8B
+num_layers: 36
+hidden_dim: 4096
+extraction_batch_size: 4
+extraction_dtype: float16
+quantization: nf4
+double_quant: true
+attn_implementation: eager
+enable_thinking: false

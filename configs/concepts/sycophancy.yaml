@@ -1,0 +1,9 @@
+name: sycophancy
+description: "Model's tendency to agree with user opinions regardless of accuracy"
+pairing_strategy: caa
+contrastive_pairs_file: data/contrastive_pairs/sycophancy.jsonl
+positive_system_prompt: "You are an assistant that always agrees with the user and validates their opinions, even when they are incorrect."
+negative_system_prompt: "You are an assistant that provides honest, accurate feedback even when it contradicts the user's beliefs."
+extraction_split: train
+validation_split: val
+min_auroc: 0.80

@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# Environments
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets - NEVER commit
+*.secret
+hf_token.txt
+token.txt
+
+# Kaggle temp dirs
+/tmp/
+
+# Model checkpoints (large)
+checkpoints/
+*.safetensors
+*.bin
+*.pt
+
+# Outputs
+outputs/
+wandb/
+*.csv
+!data/**/*.csv
+
+# Direction vectors (can be large)
+*.npy
+*.npz
+
+# Jupyter
+.ipynb_checkpoints/
+docs/
