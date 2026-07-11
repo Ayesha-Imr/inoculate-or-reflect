@@ -46,17 +46,26 @@ def log_call(prompt, response, model, usage, latency_s):
 
 def judge_binary(prompt: str, system: str = "You are a precise evaluator.") -> tuple[str, dict]:
     """Single binary judge call. Returns (response_text, usage_dict)."""
+    from openai import RateLimitError
+
     client = get_client()
     t0 = time.time()
-    response = client.chat.completions.create(
-        model=JUDGE_MODEL,
-        messages=[
-            {"role": "system", "content": system},
-            {"role": "user", "content": prompt},
-        ],
-        temperature=0,
-        max_tokens=10,
-    )
+    for attempt in range(6):
+        try:
+            response = client.chat.completions.create(
+                model=JUDGE_MODEL,
+                messages=[
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=0,
+                max_tokens=10,
+            )
+            break
+        except RateLimitError:
+            if attempt == 5:
+                raise
+            time.sleep(2 ** attempt)
     latency = time.time() - t0
     text = response.choices[0].message.content.strip()
     log_call(prompt, text, JUDGE_MODEL, response.usage, latency)

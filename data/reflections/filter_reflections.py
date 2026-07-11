@@ -34,7 +34,7 @@ SCORES_FILE = os.path.join(REPO_ROOT, "data/reflections/filter_scores.jsonl")
 REPORT_FILE = os.path.join(REPO_ROOT, "data/reflections/filter_report.json")
 OUT_FILE = os.path.join(REPO_ROOT, "data/reflections/reflection_train.jsonl")
 
-N_WORKERS = 8
+N_WORKERS = 4
 TARGET = 1000
 
 

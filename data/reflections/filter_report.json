@@ -1,0 +1,32 @@
+{
+  "n_scored": 1200,
+  "overall": {
+    "principle_articulated": 0.985,
+    "context_grounded": 0.9808333333333333,
+    "no_scaffold_leakage": 0.9991666666666666,
+    "all_pass": 0.965
+  },
+  "by_type": {
+    "retrospective": {
+      "n": 480,
+      "principle_articulated": 0.9979166666666667,
+      "context_grounded": 0.9979166666666667,
+      "no_scaffold_leakage": 0.9979166666666667,
+      "all_pass": 0.99375
+    },
+    "anticipatory": {
+      "n": 480,
+      "principle_articulated": 0.9708333333333333,
+      "context_grounded": 1.0,
+      "no_scaffold_leakage": 1.0,
+      "all_pass": 0.9708333333333333
+    },
+    "neutral": {
+      "n": 240,
+      "principle_articulated": 0.9875,
+      "context_grounded": 0.9083333333333333,
+      "no_scaffold_leakage": 1.0,
+      "all_pass": 0.8958333333333334
+    }
+  }
+}
