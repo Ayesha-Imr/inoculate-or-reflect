@@ -36,9 +36,15 @@ PHASES = {
         "source_dir": "kaggle",
         "requires_arm": True,
     },
+    "phase3": {
+        "kernel_slug": "ior-phase3-{arm}",
+        "code_file": "run_phase3_generate.py",
+        "source_dir": "kaggle",
+        "requires_arm": True,
+    },
 }
 
-VALID_ARMS = ("arm1", "arm2", "arm3", "arm4")
+VALID_ARMS = ("arm0", "arm1", "arm2", "arm3", "arm4")
 
 OUTPUT_BASE = "/tmp/ior-kaggle-kernels"
 
@@ -104,13 +110,15 @@ def prepare_phase(phase_name, username, hf_token_dataset, arm=None):
 
     # Rewrite the ARM constant for arm-parametrized phases
     if phase.get("requires_arm"):
+        import re as _re
         with open(dst_script) as f:
             content = f.read()
-        rewritten = content.replace(
-            'ARM = "arm1"  # rewritten by prepare_kernel.py --arm',
+        rewritten, n = _re.subn(
+            r'ARM = "arm\d+"  # rewritten by prepare_kernel\.py --arm',
             f'ARM = "{arm}"  # rewritten by prepare_kernel.py --arm',
+            content,
         )
-        if arm != "arm1" and rewritten == content:
+        if n == 0:
             print("ERROR: ARM constant line not found for rewriting")
             return False
         with open(dst_script, "w") as f:
