@@ -14,6 +14,7 @@ import os
 import subprocess
 import sys
 import time
+import zipfile
 from contextlib import contextmanager
 
 import numpy as np
@@ -29,8 +30,8 @@ N_READOUT_POSITIONS = 30
 TOP_K = 25
 
 ADAPTERS = {
-    "arm1": "ayesha1505/ior-arm1-baseline",
-    "arm2": "ayesha1505/ior-arm2-ip",
+    "arm1": None,  # resolved from attached private Kaggle dataset
+    "arm2": None,  # resolved from attached private Kaggle dataset
     "arm3": "ayesha1505/ior-arm3-crt-mixin",
     "arm4": "ayesha1505/ior-arm4-crt-repair",
 }
@@ -81,6 +82,29 @@ def setup_token():
 
 
 HF_TOKEN = setup_token()
+
+for local_arm in ("arm1", "arm2"):
+    config_hits = glob.glob(
+        f"/kaggle/input/**/{local_arm}/adapter_config.json", recursive=True
+    )
+    if not config_hits:
+        archive_hits = glob.glob(
+            f"/kaggle/input/**/{local_arm}.zip", recursive=True
+        )
+        if archive_hits:
+            extract_dir = f"/tmp/phase4_adapters/{local_arm}"
+            os.makedirs(extract_dir, exist_ok=True)
+            with zipfile.ZipFile(archive_hits[0]) as archive:
+                archive.extractall(extract_dir)
+            config_hits = glob.glob(
+                os.path.join(extract_dir, "**/adapter_config.json"), recursive=True
+            )
+    if not config_hits:
+        raise FileNotFoundError(
+            f"Attached Phase 4 adapters dataset has no {local_arm}/adapter_config.json"
+        )
+    ADAPTERS[local_arm] = os.path.dirname(config_hits[0])
+    print(f"Resolved {local_arm} adapter to {ADAPTERS[local_arm]}")
 
 from huggingface_hub import hf_hub_download
 
