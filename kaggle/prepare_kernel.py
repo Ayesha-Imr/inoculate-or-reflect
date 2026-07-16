@@ -46,6 +46,7 @@ PHASES = {
         "kernel_slug": "ior-phase4-readout",
         "code_file": "run_phase4_readout.py",
         "source_dir": "kaggle",
+        "extra_datasets": ["{username}/ior-phase4-inputs"],
     },
     "phase4_ablation": {
         "kernel_slug": "ior-phase4-ablation",

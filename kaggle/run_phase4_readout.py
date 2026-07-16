@@ -94,10 +94,10 @@ reserve_path = hf_hub_download(
     HF_DATASET, "gcd_sycophancy/phase4_reserve.jsonl",
     repo_type="dataset", token=HF_TOKEN,
 )
-honesty_path = hf_hub_download(
-    HF_DATASET, "contrastive_pairs/honesty.jsonl",
-    repo_type="dataset", token=HF_TOKEN,
-)
+honesty_hits = glob.glob("/kaggle/input/**/honesty.jsonl", recursive=True)
+if not honesty_hits:
+    raise FileNotFoundError("Attached Phase 4 inputs dataset has no honesty.jsonl")
+honesty_path = honesty_hits[0]
 eval_path = hf_hub_download(
     HF_DATASET, "eval/eval_sycophancy.jsonl",
     repo_type="dataset", token=HF_TOKEN,
