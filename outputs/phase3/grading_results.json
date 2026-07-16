@@ -1,0 +1,193 @@
+{
+  "arm0": {
+    "capability": {
+      "accuracy": 0.6311111111111111,
+      "n_prompts": 300,
+      "n_samples": 900
+    },
+    "correct_agreement": {
+      "agreement_rate": 0.005,
+      "contrarian_rate": 0.47833333333333333,
+      "n_prompts": 200,
+      "n_samples": 600
+    },
+    "generalization": {
+      "n_prompts": 100,
+      "n_samples": 300,
+      "mean_score": 0.51,
+      "by_variant": {
+        "baseline": 0.5416666666666666,
+        "did_not_write": 0.575,
+        "dislike": 0.058333333333333334,
+        "like": 0.75,
+        "wrote": 0.625
+      }
+    },
+    "sycophancy": {
+      "n_prompts": 300,
+      "n_samples": 900,
+      "heuristic_rate": 0.07,
+      "judge_rate": 0.0
+    }
+  },
+  "arm1": {
+    "capability": {
+      "accuracy": 0.6644444444444444,
+      "n_prompts": 300,
+      "n_samples": 900
+    },
+    "correct_agreement": {
+      "agreement_rate": 1.0,
+      "contrarian_rate": 0.0,
+      "n_prompts": 200,
+      "n_samples": 600
+    },
+    "generalization": {
+      "n_prompts": 100,
+      "n_samples": 300,
+      "mean_score": 0.9166666666666666,
+      "by_variant": {
+        "baseline": 0.875,
+        "did_not_write": 0.8833333333333333,
+        "dislike": 0.8333333333333334,
+        "like": 1.0,
+        "wrote": 0.9916666666666667
+      }
+    },
+    "sycophancy": {
+      "n_prompts": 300,
+      "n_samples": 900,
+      "heuristic_rate": 1.0,
+      "judge_rate": 0.9744444444444444
+    }
+  },
+  "arm2": {
+    "capability": {
+      "accuracy": 0.6533333333333333,
+      "n_prompts": 300,
+      "n_samples": 900
+    },
+    "correct_agreement": {
+      "agreement_rate": 0.745,
+      "contrarian_rate": 0.0,
+      "n_prompts": 200,
+      "n_samples": 600
+    },
+    "generalization": {
+      "n_prompts": 100,
+      "n_samples": 300,
+      "mean_score": 0.7483333333333333,
+      "by_variant": {
+        "baseline": 0.825,
+        "did_not_write": 0.775,
+        "dislike": 0.44166666666666665,
+        "like": 0.925,
+        "wrote": 0.775
+      }
+    },
+    "re_elicit_generic": {
+      "n_prompts": 300,
+      "n_samples": 900,
+      "heuristic_rate": 1.0,
+      "judge_rate": 0.9877777777777778
+    },
+    "re_elicit_ip": {
+      "n_prompts": 300,
+      "n_samples": 900,
+      "heuristic_rate": 1.0,
+      "judge_rate": 0.9822222222222222
+    },
+    "sycophancy": {
+      "n_prompts": 300,
+      "n_samples": 900,
+      "heuristic_rate": 0.3844444444444444,
+      "judge_rate": 0.7577777777777778
+    }
+  },
+  "arm3": {
+    "capability": {
+      "accuracy": 0.6888888888888889,
+      "n_prompts": 300,
+      "n_samples": 900
+    },
+    "correct_agreement": {
+      "agreement_rate": 1.0,
+      "contrarian_rate": 0.0,
+      "n_prompts": 200,
+      "n_samples": 600
+    },
+    "generalization": {
+      "n_prompts": 100,
+      "n_samples": 300,
+      "mean_score": 0.5266666666666666,
+      "by_variant": {
+        "baseline": 0.5416666666666666,
+        "did_not_write": 0.5583333333333333,
+        "dislike": 0.15,
+        "like": 0.725,
+        "wrote": 0.6583333333333333
+      }
+    },
+    "re_elicit_generic": {
+      "n_prompts": 300,
+      "n_samples": 900,
+      "heuristic_rate": 0.9555555555555556,
+      "judge_rate": 0.8822222222222222
+    },
+    "re_elicit_ip": {
+      "n_prompts": 300,
+      "n_samples": 900,
+      "heuristic_rate": 0.5744444444444444,
+      "judge_rate": 0.4577777777777778
+    },
+    "sycophancy": {
+      "n_prompts": 300,
+      "n_samples": 900,
+      "heuristic_rate": 1.0,
+      "judge_rate": 0.9722222222222222
+    }
+  },
+  "arm4": {
+    "capability": {
+      "accuracy": 0.6266666666666667,
+      "n_prompts": 300,
+      "n_samples": 900
+    },
+    "correct_agreement": {
+      "agreement_rate": 0.06166666666666667,
+      "contrarian_rate": 0.023333333333333334,
+      "n_prompts": 200,
+      "n_samples": 600
+    },
+    "generalization": {
+      "n_prompts": 100,
+      "n_samples": 300,
+      "mean_score": 0.495,
+      "by_variant": {
+        "baseline": 0.6083333333333333,
+        "did_not_write": 0.5416666666666666,
+        "dislike": 0.15833333333333333,
+        "like": 0.6916666666666667,
+        "wrote": 0.475
+      }
+    },
+    "re_elicit_generic": {
+      "n_prompts": 300,
+      "n_samples": 900,
+      "heuristic_rate": 0.7666666666666667,
+      "judge_rate": 0.37444444444444447
+    },
+    "re_elicit_ip": {
+      "n_prompts": 300,
+      "n_samples": 900,
+      "heuristic_rate": 0.06333333333333334,
+      "judge_rate": 0.05444444444444444
+    },
+    "sycophancy": {
+      "n_prompts": 300,
+      "n_samples": 900,
+      "heuristic_rate": 0.17888888888888888,
+      "judge_rate": 0.0
+    }
+  }
+}

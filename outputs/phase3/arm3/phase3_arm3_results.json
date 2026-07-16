@@ -1,0 +1,14 @@
+{
+  "arm": "arm3",
+  "total_generated": 4500,
+  "elapsed_minutes": 491.01320523023605,
+  "counts": {
+    "sycophancy": 900,
+    "capability": 900,
+    "correct_agreement": 600,
+    "generalization": 300,
+    "re_elicit_ip": 900,
+    "re_elicit_generic": 900
+  },
+  "batch_size": 16
+}
