@@ -1,0 +1,97 @@
+{
+  "caveat": "arm4 was initialized from arm1; arm4 cosine-to-baseline values are relative to arm1 at repair-training step 0",
+  "arms": {
+    "arm1": {
+      "label": "Baseline SFT",
+      "n_measurements": 11,
+      "final_step": 250,
+      "final_epoch": 2.0,
+      "initial": {
+        "sycophancy_cosine_to_baseline": 0.9999970197677612,
+        "honesty_cosine_to_baseline": 0.9999973177909851,
+        "cross_sycophancy_honesty_cosine": -0.4024449586868286
+      },
+      "final": {
+        "sycophancy_cosine_to_baseline": 0.49977993965148926,
+        "honesty_cosine_to_baseline": 0.4065864682197571,
+        "cross_sycophancy_honesty_cosine": -0.2527816593647003
+      },
+      "change": {
+        "sycophancy_cosine_to_baseline": -0.500217080116272,
+        "honesty_cosine_to_baseline": -0.593410849571228,
+        "cross_sycophancy_honesty_cosine": 0.1496632993221283
+      },
+      "sycophancy_auroc_fixed_final": 1.0,
+      "honesty_auroc_fixed_final": 1.0
+    },
+    "arm2": {
+      "label": "Inoculation prompting",
+      "n_measurements": 11,
+      "final_step": 250,
+      "final_epoch": 2.0,
+      "initial": {
+        "sycophancy_cosine_to_baseline": 0.9999970197677612,
+        "honesty_cosine_to_baseline": 0.9999973177909851,
+        "cross_sycophancy_honesty_cosine": -0.4024449586868286
+      },
+      "final": {
+        "sycophancy_cosine_to_baseline": 0.6993880271911621,
+        "honesty_cosine_to_baseline": 0.5814958214759827,
+        "cross_sycophancy_honesty_cosine": -0.5336595773696899
+      },
+      "change": {
+        "sycophancy_cosine_to_baseline": -0.3006089925765991,
+        "honesty_cosine_to_baseline": -0.41850149631500244,
+        "cross_sycophancy_honesty_cosine": -0.13121461868286133
+      },
+      "sycophancy_auroc_fixed_final": 1.0,
+      "honesty_auroc_fixed_final": 1.0
+    },
+    "arm3": {
+      "label": "CRT mix-in",
+      "n_measurements": 17,
+      "final_step": 396,
+      "final_epoch": 2.0,
+      "initial": {
+        "sycophancy_cosine_to_baseline": 0.9999970197677612,
+        "honesty_cosine_to_baseline": 0.9999973177909851,
+        "cross_sycophancy_honesty_cosine": -0.4024449586868286
+      },
+      "final": {
+        "sycophancy_cosine_to_baseline": 0.45544424653053284,
+        "honesty_cosine_to_baseline": 0.31917524337768555,
+        "cross_sycophancy_honesty_cosine": -0.2928541898727417
+      },
+      "change": {
+        "sycophancy_cosine_to_baseline": -0.5445527732372284,
+        "honesty_cosine_to_baseline": -0.6808220744132996,
+        "cross_sycophancy_honesty_cosine": 0.10959076881408691
+      },
+      "sycophancy_auroc_fixed_final": 1.0,
+      "honesty_auroc_fixed_final": 1.0
+    },
+    "arm4": {
+      "label": "CRT repair (relative to arm1)",
+      "n_measurements": 7,
+      "final_step": 146,
+      "final_epoch": 2.0,
+      "initial": {
+        "sycophancy_cosine_to_baseline": 0.9999425411224365,
+        "honesty_cosine_to_baseline": 0.999962329864502,
+        "cross_sycophancy_honesty_cosine": -0.2527816593647003
+      },
+      "final": {
+        "sycophancy_cosine_to_baseline": 0.3178700804710388,
+        "honesty_cosine_to_baseline": 0.31000205874443054,
+        "cross_sycophancy_honesty_cosine": -0.3161375820636749
+      },
+      "change": {
+        "sycophancy_cosine_to_baseline": -0.6820724606513977,
+        "honesty_cosine_to_baseline": -0.6899602711200714,
+        "cross_sycophancy_honesty_cosine": -0.06335592269897461
+      },
+      "sycophancy_auroc_fixed_final": 1.0,
+      "honesty_auroc_fixed_final": 1.0
+    }
+  }
+}

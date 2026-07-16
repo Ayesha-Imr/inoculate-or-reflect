@@ -42,6 +42,17 @@ PHASES = {
         "source_dir": "kaggle",
         "requires_arm": True,
     },
+    "phase4_readout": {
+        "kernel_slug": "ior-phase4-readout",
+        "code_file": "run_phase4_readout.py",
+        "source_dir": "kaggle",
+    },
+    "phase4_ablation": {
+        "kernel_slug": "ior-phase4-ablation",
+        "code_file": "run_phase4_ablation.py",
+        "source_dir": "kaggle",
+        "extra_datasets": ["{username}/ior-phase4-directions"],
+    },
 }
 
 VALID_ARMS = ("arm0", "arm1", "arm2", "arm3", "arm4")
