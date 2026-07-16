@@ -1,0 +1,337 @@
+{
+  "method": "10,000-resample prompt-cluster bootstrap with seed 42",
+  "behavioral": {
+    "arm0": {
+      "method": "Untrained",
+      "sycophancy": {
+        "estimate": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "n_prompts": 300,
+        "n_samples": 900
+      },
+      "capability": {
+        "estimate": 0.6311111111111111,
+        "ci95": [
+          0.5833333333333334,
+          0.6788888888888889
+        ],
+        "n_prompts": 300,
+        "n_samples": 900
+      },
+      "correct_agreement": {
+        "estimate": 0.005,
+        "ci95": [
+          0.0,
+          0.011666666666666665
+        ],
+        "n_prompts": 200,
+        "n_samples": 600
+      },
+      "contrarian": {
+        "estimate": 0.4783333333333333,
+        "ci95": [
+          0.42666666666666664,
+          0.53
+        ],
+        "n_prompts": 200,
+        "n_samples": 600
+      },
+      "generalization": {
+        "estimate": 0.51,
+        "ci95": [
+          0.4216666666666667,
+          0.5983333333333334
+        ],
+        "n_prompts": 100,
+        "n_samples": 300
+      }
+    },
+    "arm1": {
+      "method": "Baseline SFT",
+      "sycophancy": {
+        "estimate": 0.9744444444444446,
+        "ci95": [
+          0.9622222222222223,
+          0.9844444444444446
+        ],
+        "n_prompts": 300,
+        "n_samples": 900
+      },
+      "capability": {
+        "estimate": 0.6644444444444444,
+        "ci95": [
+          0.6144444444444443,
+          0.7133333333333334
+        ],
+        "n_prompts": 300,
+        "n_samples": 900
+      },
+      "correct_agreement": {
+        "estimate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ],
+        "n_prompts": 200,
+        "n_samples": 600
+      },
+      "contrarian": {
+        "estimate": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "n_prompts": 200,
+        "n_samples": 600
+      },
+      "generalization": {
+        "estimate": 0.9166666666666665,
+        "ci95": [
+          0.8766666666666667,
+          0.9533333333333333
+        ],
+        "n_prompts": 100,
+        "n_samples": 300
+      }
+    },
+    "arm2": {
+      "method": "Inoculation prompting",
+      "sycophancy": {
+        "estimate": 0.7577777777777777,
+        "ci95": [
+          0.7277777777777777,
+          0.7866666666666666
+        ],
+        "n_prompts": 300,
+        "n_samples": 900
+      },
+      "capability": {
+        "estimate": 0.6533333333333333,
+        "ci95": [
+          0.6033333333333334,
+          0.701111111111111
+        ],
+        "n_prompts": 300,
+        "n_samples": 900
+      },
+      "correct_agreement": {
+        "estimate": 0.745,
+        "ci95": [
+          0.7083333333333333,
+          0.7816666666666666
+        ],
+        "n_prompts": 200,
+        "n_samples": 600
+      },
+      "contrarian": {
+        "estimate": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "n_prompts": 200,
+        "n_samples": 600
+      },
+      "generalization": {
+        "estimate": 0.7483333333333333,
+        "ci95": [
+          0.67,
+          0.82
+        ],
+        "n_prompts": 100,
+        "n_samples": 300
+      }
+    },
+    "arm3": {
+      "method": "CRT mix-in",
+      "sycophancy": {
+        "estimate": 0.9722222222222223,
+        "ci95": [
+          0.9588888888888888,
+          0.9844444444444443
+        ],
+        "n_prompts": 300,
+        "n_samples": 900
+      },
+      "capability": {
+        "estimate": 0.6888888888888889,
+        "ci95": [
+          0.6433333333333333,
+          0.7333333333333333
+        ],
+        "n_prompts": 300,
+        "n_samples": 900
+      },
+      "correct_agreement": {
+        "estimate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ],
+        "n_prompts": 200,
+        "n_samples": 600
+      },
+      "contrarian": {
+        "estimate": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "n_prompts": 200,
+        "n_samples": 600
+      },
+      "generalization": {
+        "estimate": 0.5266666666666667,
+        "ci95": [
+          0.44333333333333336,
+          0.6099999999999999
+        ],
+        "n_prompts": 100,
+        "n_samples": 300
+      }
+    },
+    "arm4": {
+      "method": "CRT repair",
+      "sycophancy": {
+        "estimate": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "n_prompts": 300,
+        "n_samples": 900
+      },
+      "capability": {
+        "estimate": 0.6266666666666667,
+        "ci95": [
+          0.5788888888888889,
+          0.6744444444444444
+        ],
+        "n_prompts": 300,
+        "n_samples": 900
+      },
+      "correct_agreement": {
+        "estimate": 0.06166666666666666,
+        "ci95": [
+          0.04,
+          0.085
+        ],
+        "n_prompts": 200,
+        "n_samples": 600
+      },
+      "contrarian": {
+        "estimate": 0.02333333333333333,
+        "ci95": [
+          0.011666666666666665,
+          0.03666666666666667
+        ],
+        "n_prompts": 200,
+        "n_samples": 600
+      },
+      "generalization": {
+        "estimate": 0.495,
+        "ci95": [
+          0.4099999999999999,
+          0.5816666666666667
+        ],
+        "n_prompts": 100,
+        "n_samples": 300
+      }
+    }
+  },
+  "re_elicitation": {
+    "arm2": {
+      "method": "Inoculation prompting",
+      "baseline": {
+        "estimate": 0.7577777777777777,
+        "ci95": [
+          0.7277777777777777,
+          0.7866666666666666
+        ],
+        "n_prompts": 300,
+        "n_samples": 900
+      },
+      "exact_ip": {
+        "estimate": 0.9822222222222223,
+        "ci95": [
+          0.9711111111111113,
+          0.9911111111111113
+        ],
+        "n_prompts": 300,
+        "n_samples": 900
+      },
+      "generic": {
+        "estimate": 0.9877777777777778,
+        "ci95": [
+          0.9788888888888889,
+          0.9944444444444446
+        ],
+        "n_prompts": 300,
+        "n_samples": 900
+      }
+    },
+    "arm3": {
+      "method": "CRT mix-in",
+      "baseline": {
+        "estimate": 0.9722222222222223,
+        "ci95": [
+          0.9588888888888888,
+          0.9844444444444443
+        ],
+        "n_prompts": 300,
+        "n_samples": 900
+      },
+      "exact_ip": {
+        "estimate": 0.45777777777777773,
+        "ci95": [
+          0.41444444444444445,
+          0.5011111111111111
+        ],
+        "n_prompts": 300,
+        "n_samples": 900
+      },
+      "generic": {
+        "estimate": 0.8822222222222222,
+        "ci95": [
+          0.86,
+          0.9033333333333333
+        ],
+        "n_prompts": 300,
+        "n_samples": 900
+      }
+    },
+    "arm4": {
+      "method": "CRT repair",
+      "baseline": {
+        "estimate": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "n_prompts": 300,
+        "n_samples": 900
+      },
+      "exact_ip": {
+        "estimate": 0.05444444444444444,
+        "ci95": [
+          0.03555555555555556,
+          0.07447222222222183
+        ],
+        "n_prompts": 300,
+        "n_samples": 900
+      },
+      "generic": {
+        "estimate": 0.37444444444444447,
+        "ci95": [
+          0.32666666666666666,
+          0.42222222222222217
+        ],
+        "n_prompts": 300,
+        "n_samples": 900
+      }
+    }
+  }
+}
