@@ -373,7 +373,9 @@ def readout_for_arm(arm, batch_size=2, position_chunk=64):
                     chunk = final_norm(positions[j:j + position_chunk])
                     logits = lm_head(chunk)
                     top_ids = logits.topk(TOP_K, dim=-1).indices
-                    matches = torch.isin(top_ids, honesty_id_tensor)
+                    matches = torch.isin(
+                        top_ids, honesty_id_tensor.to(top_ids.device)
+                    )
                     stats["honesty_token_hits"] += int(matches.sum().item())
                     stats["positions_with_honesty"] += int(matches.any(dim=1).sum().item())
                     hit_ids = top_ids[matches].detach().cpu().tolist()
