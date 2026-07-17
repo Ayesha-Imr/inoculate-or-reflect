@@ -273,18 +273,27 @@ def aggregate(graded):
 # ── Verification sample ──────────────────────────────────────────────
 
 def select_verification_sample(graded, n=30):
-    """Select 15 sycophancy + 15 generalization items, stratified by arm."""
+    """Select 10 sycophancy + 10 generalization + 10 correct-agreement items.
+
+    Correct-agreement added 2026-07-17: that metric is judge-graded since the
+    rubric-v2 regrade and was never covered by the original 30-item gate.
+    """
     rng = random.Random(42)
     syco = [(r, g) for r, g in graded
             if r["eval_type"] == "sycophancy" and g.get("judge") is not None]
     gen = [(r, g) for r, g in graded
            if r["eval_type"] == "generalization" and g.get("score") is not None]
+    agree = [(r, g) for r, g in graded
+             if r["eval_type"] == "correct_agreement"
+             and g.get("verdict") is not None]
 
     sample = []
     if syco:
-        sample += rng.sample(syco, min(15, len(syco)))
+        sample += rng.sample(syco, min(10, len(syco)))
     if gen:
-        sample += rng.sample(gen, min(15, len(gen)))
+        sample += rng.sample(gen, min(10, len(gen)))
+    if agree:
+        sample += rng.sample(agree, min(10, len(agree)))
 
     out = []
     for r, g in sample:
@@ -340,23 +349,40 @@ def main():
     use_judge = not args.skip_judge
     graded = grade_all(rows, use_judge=use_judge, concurrency=args.concurrency)
 
-    # Aggregate
+    # Aggregate. Merge into any existing results so grading a subset of arms
+    # (e.g. --arms arm5 arm6) updates only those arms' entries instead of
+    # clobbering the full grade record.
     results = aggregate(graded)
+    graded_arms = set(results)
 
     os.makedirs(PHASE3_DIR, exist_ok=True)
+    if os.path.exists(RESULTS_FILE):
+        with open(RESULTS_FILE) as f:
+            merged = json.load(f)
+        merged.update(results)
+        results = merged
     with open(RESULTS_FILE, "w") as f:
         json.dump(results, f, indent=2)
-    print(f"\nAggregated results written to {RESULTS_FILE}")
+    print(f"\nAggregated results written to {RESULTS_FILE} "
+          f"(updated arms: {sorted(graded_arms)})")
 
-    # Per-item detail
+    # Per-item detail: keep existing rows for arms not graded this run
+    kept_lines = []
+    if os.path.exists(PER_ITEM_FILE):
+        with open(PER_ITEM_FILE) as f:
+            kept_lines = [line.rstrip("\n") for line in f
+                          if json.loads(line)["arm"] not in graded_arms]
     with open(PER_ITEM_FILE, "w") as f:
+        for line in kept_lines:
+            f.write(line + "\n")
         for row, grade in graded:
             f.write(json.dumps({
                 "arm": row["arm"], "eval_type": row["eval_type"],
                 "id": row["id"], "sample_idx": row["sample_idx"],
                 **grade,
             }) + "\n")
-    print(f"Per-item grades written to {PER_ITEM_FILE}")
+    print(f"Per-item grades written to {PER_ITEM_FILE} "
+          f"({len(kept_lines)} rows preserved from other arms)")
 
     # Print summary
     print(f"\n{'='*70}")
