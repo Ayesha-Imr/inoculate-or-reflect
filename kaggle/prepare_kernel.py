@@ -59,7 +59,7 @@ PHASES = {
     },
 }
 
-VALID_ARMS = ("arm0", "arm1", "arm2", "arm3", "arm4")
+VALID_ARMS = ("arm0", "arm1", "arm2", "arm3", "arm4", "arm5", "arm6")
 
 OUTPUT_BASE = "/tmp/ior-kaggle-kernels"
 
@@ -100,18 +100,23 @@ def resolve_token_dataset(hf_token_dataset, username):
     return hf_token_dataset
 
 
-def prepare_phase(phase_name, username, hf_token_dataset, arm=None):
+def prepare_phase(phase_name, username, hf_token_dataset, arm=None,
+                  eval_types=None):
     """Prepare a single phase's push directory."""
     if phase_name not in PHASES:
         print(f"Unknown phase: {phase_name}. Available: {list(PHASES.keys())}")
         return False
 
     phase = PHASES[phase_name]
+    if eval_types and phase_name != "phase3":
+        print("--eval-types only applies to phase3")
+        return False
     if phase.get("requires_arm"):
         if arm not in VALID_ARMS:
             print(f"Phase {phase_name} requires --arm (one of {VALID_ARMS})")
             return False
-        out_dir = os.path.join(OUTPUT_BASE, f"{phase_name}_{arm}")
+        suffix = "_regen" if eval_types else ""
+        out_dir = os.path.join(OUTPUT_BASE, f"{phase_name}_{arm}{suffix}")
     else:
         out_dir = os.path.join(OUTPUT_BASE, phase_name)
     os.makedirs(out_dir, exist_ok=True)
@@ -136,6 +141,17 @@ def prepare_phase(phase_name, username, hf_token_dataset, arm=None):
         if n == 0:
             print("ERROR: ARM constant line not found for rewriting")
             return False
+        if eval_types:
+            rewritten, n = _re.subn(
+                r'EVAL_TYPES = "[^"]*"  # rewritten by prepare_kernel\.py'
+                r' --eval-types',
+                f'EVAL_TYPES = "{eval_types}"  # rewritten by '
+                f'prepare_kernel.py --eval-types',
+                rewritten,
+            )
+            if n == 0:
+                print("ERROR: EVAL_TYPES constant line not found for rewriting")
+                return False
         with open(dst_script, "w") as f:
             f.write(rewritten)
 
@@ -148,6 +164,8 @@ def prepare_phase(phase_name, username, hf_token_dataset, arm=None):
 
     kernel_slug = phase["kernel_slug"].format(arm=arm) if phase.get("requires_arm") \
         else phase["kernel_slug"]
+    if eval_types:
+        kernel_slug += "-regen"
     metadata = {
         "id": f"{username}/{kernel_slug}",
         "title": kernel_slug,
@@ -182,6 +200,11 @@ def main():
     parser.add_argument("phase", help="Phase to prepare (phase0, or 'all')")
     parser.add_argument("--username", help="Kaggle username (auto-detected if omitted)")
     parser.add_argument("--arm", help="Training arm for phase2 (arm1..arm4)")
+    parser.add_argument("--eval-types",
+                        help="phase3 only: comma-separated eval-type subset "
+                             "(e.g. capability,correct_agreement); skips "
+                             "re-elicitation and uses an ior-phase3-<arm>-"
+                             "regen kernel slug")
     parser.add_argument("--hf-token-dataset", default="auto",
                         help="Kaggle dataset slug for HF token (default: auto)")
 
@@ -201,7 +224,8 @@ def main():
     phases = list(PHASES.keys()) if args.phase == "all" else [args.phase]
 
     for phase in phases:
-        success = prepare_phase(phase, username, hf_token_dataset, arm=args.arm)
+        success = prepare_phase(phase, username, hf_token_dataset, arm=args.arm,
+                                eval_types=args.eval_types)
         if not success:
             sys.exit(1)
         print()

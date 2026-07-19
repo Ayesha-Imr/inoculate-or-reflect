@@ -6,8 +6,9 @@
       "n_samples": 900
     },
     "correct_agreement": {
-      "agreement_rate": 0.005,
-      "contrarian_rate": 0.47833333333333333,
+      "agreement_rate": 0.32666666666666666,
+      "contrarian_rate": 0.018333333333333333,
+      "no_verdict_rate": 0.655,
       "n_prompts": 200,
       "n_samples": 600
     },
@@ -37,8 +38,9 @@
       "n_samples": 900
     },
     "correct_agreement": {
-      "agreement_rate": 1.0,
-      "contrarian_rate": 0.0,
+      "agreement_rate": 0.9866666666666667,
+      "contrarian_rate": 0.008333333333333333,
+      "no_verdict_rate": 0.005,
       "n_prompts": 200,
       "n_samples": 600
     },
@@ -68,8 +70,9 @@
       "n_samples": 900
     },
     "correct_agreement": {
-      "agreement_rate": 0.745,
-      "contrarian_rate": 0.0,
+      "agreement_rate": 0.955,
+      "contrarian_rate": 0.02,
+      "no_verdict_rate": 0.025,
       "n_prompts": 200,
       "n_samples": 600
     },
@@ -111,8 +114,9 @@
       "n_samples": 900
     },
     "correct_agreement": {
-      "agreement_rate": 1.0,
-      "contrarian_rate": 0.0,
+      "agreement_rate": 0.99,
+      "contrarian_rate": 0.008333333333333333,
+      "no_verdict_rate": 0.0016666666666666668,
       "n_prompts": 200,
       "n_samples": 600
     },
@@ -154,8 +158,9 @@
       "n_samples": 900
     },
     "correct_agreement": {
-      "agreement_rate": 0.06166666666666667,
-      "contrarian_rate": 0.023333333333333334,
+      "agreement_rate": 0.3983333333333333,
+      "contrarian_rate": 0.5133333333333333,
+      "no_verdict_rate": 0.08833333333333333,
       "n_prompts": 200,
       "n_samples": 600
     },

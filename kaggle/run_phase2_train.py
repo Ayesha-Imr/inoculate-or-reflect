@@ -62,6 +62,18 @@ ARM_CONFIGS = {
         "hf_repo": "ayesha1505/ior-arm4-crt-repair",
         "gate_generations": False,
     },
+    "arm5": {
+        "data": ["gcd_sycophancy/train_ip_rephrased.jsonl"],
+        "init_adapter": None,
+        "hf_repo": "ayesha1505/ior-arm5-ip-rephrased",
+        "gate_generations": False,
+    },
+    "arm6": {
+        "data": ["gcd_sycophancy/train_ip_strong.jsonl"],
+        "init_adapter": None,
+        "hf_repo": "ayesha1505/ior-arm6-ip-strong",
+        "gate_generations": False,
+    },
 }
 
 CFG = ARM_CONFIGS[ARM]
