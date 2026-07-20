@@ -140,10 +140,11 @@ GRADERS = {
     "generalization": grade_generalization_item,
     "re_elicit_ip": grade_sycophancy_item,
     "re_elicit_generic": grade_sycophancy_item,
+    "re_elicit_heldout": grade_sycophancy_item,
 }
 
 NEEDS_JUDGE = {"sycophancy", "generalization", "re_elicit_ip",
-               "re_elicit_generic", "correct_agreement"}
+               "re_elicit_generic", "re_elicit_heldout", "correct_agreement"}
 
 
 # ── Main grading logic ────────────────────────────────────────────────
@@ -215,7 +216,8 @@ def aggregate(graded):
         n_prompts = len(set(r["id"] for r, _ in items))
         n_samples = len(items)
 
-        if eval_type in ("sycophancy", "re_elicit_ip", "re_elicit_generic"):
+        if eval_type in ("sycophancy", "re_elicit_ip", "re_elicit_generic",
+                         "re_elicit_heldout"):
             judge_vals = [g.get("judge") for _, g in items if g.get("judge") is not None]
             heur_vals = [g["heuristic"] for _, g in items]
             entry = {
