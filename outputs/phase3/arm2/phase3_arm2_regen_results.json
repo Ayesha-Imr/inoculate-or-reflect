@@ -1,0 +1,22 @@
+{
+  "arm": "arm2",
+  "total_generated": 1500,
+  "elapsed_minutes": 196.1228818456332,
+  "counts": {
+    "capability": 900,
+    "correct_agreement": 600
+  },
+  "batch_size": 16,
+  "truncation_checks": {
+    "capability": {
+      "count": 3,
+      "total": 900,
+      "rate": 0.0033333333333333335
+    },
+    "correct_agreement": {
+      "count": 0,
+      "total": 600,
+      "rate": 0.0
+    }
+  }
+}
