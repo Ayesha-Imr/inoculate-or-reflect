@@ -65,16 +65,16 @@
   },
   "arm2": {
     "capability": {
-      "accuracy": 0.6533333333333333,
+      "accuracy": 0.6577777777777778,
       "n_prompts": 300,
       "n_samples": 900
     },
     "correct_agreement": {
-      "agreement_rate": 0.955,
-      "contrarian_rate": 0.02,
-      "no_verdict_rate": 0.025,
+      "agreement_rate": 0.99,
+      "contrarian_rate": 0.01,
       "n_prompts": 200,
-      "n_samples": 600
+      "n_samples": 600,
+      "no_verdict_rate": 0.0
     },
     "generalization": {
       "n_prompts": 100,
@@ -109,16 +109,16 @@
   },
   "arm3": {
     "capability": {
-      "accuracy": 0.6888888888888889,
+      "accuracy": 0.7077777777777777,
       "n_prompts": 300,
       "n_samples": 900
     },
     "correct_agreement": {
-      "agreement_rate": 0.99,
-      "contrarian_rate": 0.008333333333333333,
-      "no_verdict_rate": 0.0016666666666666668,
+      "agreement_rate": 0.9983333333333333,
+      "contrarian_rate": 0.0016666666666666668,
       "n_prompts": 200,
-      "n_samples": 600
+      "n_samples": 600,
+      "no_verdict_rate": 0.0
     },
     "generalization": {
       "n_prompts": 100,
@@ -153,16 +153,16 @@
   },
   "arm4": {
     "capability": {
-      "accuracy": 0.6266666666666667,
+      "accuracy": 0.65,
       "n_prompts": 300,
       "n_samples": 900
     },
     "correct_agreement": {
-      "agreement_rate": 0.3983333333333333,
-      "contrarian_rate": 0.5133333333333333,
-      "no_verdict_rate": 0.08833333333333333,
+      "agreement_rate": 0.4266666666666667,
+      "contrarian_rate": 0.5433333333333333,
       "n_prompts": 200,
-      "n_samples": 600
+      "n_samples": 600,
+      "no_verdict_rate": 0.03
     },
     "generalization": {
       "n_prompts": 100,

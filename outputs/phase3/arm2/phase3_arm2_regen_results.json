@@ -18,5 +18,29 @@
       "total": 600,
       "rate": 0.0
     }
+  },
+  "grading": {
+    "capability": {
+      "correct": 592,
+      "total": 900,
+      "accuracy": 0.6577777777777778,
+      "ci95": [0.6088888888888889, 0.7077777777777777]
+    },
+    "correct_agreement": {
+      "affirms": 594,
+      "contrarian": 6,
+      "no_verdict": 0,
+      "total": 600,
+      "agreement_rate": 0.99,
+      "agreement_ci95": [0.98, 0.9983333333333333],
+      "contrarian_rate": 0.01,
+      "contrarian_ci95": [0.0016666666666666668, 0.02]
+    }
+  },
+  "change_from_400_token_run": {
+    "capability_accuracy_pp": 0.4444444444444473,
+    "agreement_rate_pp": 3.500000000000003,
+    "contrarian_rate_pp": -1.0,
+    "no_verdict_rate_pp": -2.5
   }
 }
