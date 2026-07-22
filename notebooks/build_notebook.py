@@ -446,7 +446,7 @@ print("decoder layers :", LAYERS_PATH)
 print("final norm     :", NORM_PATH)
 print("lm head        :", HEAD_PATH)
 # NNSIGHT API NOTE: on the nnsight envoy, access the same dotted path, e.g.
-#   layer_L = _resolve(lm, f"{LAYERS_PATH}.{L}")  ->  layer_L.output[0]
+#   layer_L = _resolve(lm, f"{LAYERS_PATH}.{L}")  ->  layer_L.output
 # print(lm)  # uncomment once to eyeball the module tree
 """)
 
@@ -558,7 +558,7 @@ def nn_layer_acts(prompt, layers):
     saved = {}
     with lm.trace(prompt):
         for L in layers:
-            saved[L] = _resolve(lm, f"{LAYERS_PATH}.{L}").output[0][0, -1, :].save()
+            saved[L] = _resolve(lm, f"{LAYERS_PATH}.{L}").output[0, -1, :].save()
     return {L: saved[L].detach().float().cpu().numpy() for L in layers}
 
 @torch.inference_mode()
@@ -708,7 +708,7 @@ def logit_lens_gap(prompt, layers):
     saved = {}
     with lm.trace(prompt):
         for L in layers:
-            h = _resolve(lm, f"{LAYERS_PATH}.{L}").output[0]
+            h = _resolve(lm, f"{LAYERS_PATH}.{L}").output
             saved[L] = head(norm(h))[0, -1, :].save()
     gaps = {}
     for L in layers:
@@ -775,24 +775,42 @@ preselected layers, full α sweep, paired stats).
 code(r"""
 beta_task_t = torch.tensor(beta_task)
 
-def make_edit(arm_layer, mode, alpha):
-    '''Return a closure applying the steering edit to LAYERS_PATH[arm_layer].'''
-    L = arm_layer
-    d = torch.tensor(d_task).to(base_model.device, torch.float16)
-    dL = d[L]; bL = float(beta_task[L])
-    def edit():
-        proxy = _resolve(lm, f"{LAYERS_PATH}.{L}").output[0]
-        if mode == "remove":
-            proj = (proxy * dL).sum(-1, keepdim=True)
-            proxy[:] = proxy - alpha * proj * dL
-        else:  # add / restore
-            proxy[:] = proxy + alpha * bL * dL
-    return edit
+_d_task_dev = torch.tensor(d_task).to(base_model.device, torch.float16)
 
+def _decoder_layer_module(L):
+    return _resolve(peft_model, f"{LAYERS_PATH}.{L}")
+
+def make_edit_hook(L, mode, alpha):
+    '''Forward hook applying the steering edit to the layer-L residual.
+    Robust for greedy generation: fires on the prompt forward AND every generated
+    token (incl. early-EOS rollouts), avoiding the nnsight tracer.all()
+    "intervention not used" edge case. Math is identical to the traced edit, and
+    NNSight<->HF greedy parity is verified in section 2.'''
+    dL = _d_task_dev[L]; bL = float(beta_task[L])
+    def hook(module, inputs, output):
+        h = output[0] if isinstance(output, tuple) else output
+        if mode == "remove":
+            proj = (h * dL).sum(-1, keepdim=True)
+            h2 = h - alpha * proj * dL
+        else:  # add / restore
+            h2 = h + alpha * bL * dL
+        if isinstance(output, tuple):
+            return (h2,) + tuple(output[1:])
+        return h2
+    return hook
+
+@torch.inference_mode()
 def steered_generate(prompt, L, mode, alpha, max_new_tokens=GEN_MAX_NEW_TOKENS):
-    if alpha == 0:
-        return nn_generate(prompt, max_new_tokens, edit=None)
-    return nn_generate(prompt, max_new_tokens, edit=make_edit(L, mode, alpha))
+    formatted = chat_text([{"role": "user", "content": prompt}], add_generation_prompt=True)
+    inp = tokenizer(formatted, return_tensors="pt").to(peft_model.device)
+    handle = _decoder_layer_module(L).register_forward_hook(make_edit_hook(L, mode, alpha)) if alpha != 0 else None
+    try:
+        out = peft_model.generate(**inp, max_new_tokens=max_new_tokens, do_sample=False,
+                                  pad_token_id=tokenizer.pad_token_id)
+    finally:
+        if handle is not None:
+            handle.remove()
+    return tokenizer.decode(out[0, inp["input_ids"].shape[1]:], skip_special_tokens=True)
 """)
 
 code(r"""
@@ -934,13 +952,18 @@ print("ΔW Frobenius norm:", {a: round(v, 1) for a, v in fro.items()})
 code(r"""
 set_style()
 arms6 = [a for a in ALL_ARMS if a != "arm0"]
-fig, ax = plt.subplots(figsize=(7, 4.5))
-ax.bar(arms6, [fro[a] for a in arms6], color=[ARM_COLORS[a] for a in arms6])
+SHORT = {"arm1": "Baseline", "arm2": "Inoc.\nprompt", "arm3": "CRT\nmix-in",
+         "arm4": "CRT\nrepair", "arm5": "Rephrased\nIP", "arm6": "Strong\nIP"}
+fig, ax = plt.subplots(figsize=(8.5, 5))
+x = list(range(len(arms6)))
+ax.bar(x, [fro[a] for a in arms6], color=[ARM_COLORS[a] for a in arms6], width=0.72)
 for i, a in enumerate(arms6):
-    ax.text(i, fro[a], f"{fro[a]:.0f}", ha="center", va="bottom", fontsize=10)
+    ax.text(i, fro[a], f"{fro[a]:.1f}", ha="center", va="bottom", fontsize=10)
+ax.set_xticks(x)
+ax.set_xticklabels([f"{a}\n{SHORT[a]}" for a in arms6], fontsize=9)
 ax.set_ylabel("‖ΔW‖ (Frobenius, all target modules)")
 ax.set_title("How much each intervention changed the weights")
-ax.set_xticklabels([f"{a}\n{METHOD_NAMES[a]}" for a in arms6], fontsize=9)
+ax.margins(x=0.03)
 savefig(fig, "fig6_lora_norm"); plt.show()
 """)
 
@@ -956,12 +979,19 @@ the reverse). Run only if §2–6 finished with time to spare.
 """)
 
 code(r"""
+# single-response graders (normally defined in the behavior-helper cell; defined
+# here too so patching runs regardless of session run-order)
+def grade_syco(resp):        return {"syco": bool(judge_sycophancy(resp))}
+def grade_agree(resp):
+    v = judge_correct_agreement(resp)
+    return {"agree": v == "AFFIRMS", "contrarian": v == "REJECTS"}
+
 # Capture arm4 residuals, then run arm1 injecting them at the chosen layer.
 def capture_residual(arm, prompt, L):
     formatted = chat_text([{"role": "user", "content": prompt}], True)
     with use_arm(arm):
         with lm.trace(formatted):
-            h = _resolve(lm, f"{LAYERS_PATH}.{L}").output[0].save()
+            h = _resolve(lm, f"{LAYERS_PATH}.{L}").output.save()
     return h.detach().to(base_model.device, torch.float16)
 
 def patched_generate(target_arm, prompt, L, donor_resid, max_new_tokens=GEN_MAX_NEW_TOKENS):
@@ -969,7 +999,7 @@ def patched_generate(target_arm, prompt, L, donor_resid, max_new_tokens=GEN_MAX_
     n = donor_resid.shape[1]
     with use_arm(target_arm):
         with lm.generate(formatted, max_new_tokens=max_new_tokens, do_sample=False) as tracer:
-            proxy = _resolve(lm, f"{LAYERS_PATH}.{L}").output[0]
+            proxy = _resolve(lm, f"{LAYERS_PATH}.{L}").output
             proxy[:, :n, :] = donor_resid   # patch prompt positions only
             gen_out = lm.generator.output.save()
     ids = gen_out[0]
