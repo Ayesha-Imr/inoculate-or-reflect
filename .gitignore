@@ -41,11 +41,24 @@ checkpoints/
 *.bin
 *.pt
 
-# Outputs (ignored except the generated figures — re-include each ancestor level)
+# Outputs — ignored except the figures + the small canonical result files that
+# back them (bulky per-token run logs stay out). Re-include each ancestor level.
 outputs/*
 !outputs/phase4
 outputs/phase4/*
 !outputs/phase4/figures
+!outputs/phase4/lora_geometry.json
+!outputs/phase4/aggregate
+!outputs/phase4/projections
+!outputs/phase4/logit_lens
+!outputs/phase4/parity
+!outputs/phase4/directions
+outputs/phase4/directions/*
+!outputs/phase4/directions/direction_summary.json
+!outputs/phase4/patching
+outputs/phase4/patching/*
+!outputs/phase4/patching/patch_results.jsonl
+# still ignored: steering/ (stageB/C), judge_log.jsonl, directions.npz, patch_demo.jsonl
 wandb/
 *.csv
 !data/**/*.csv

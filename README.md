@@ -1,221 +1,272 @@
 # Inoculate or Reflect
 
-Can a model be protected from learning an unwanted behavior by naming that
-behavior during training? If it has already learned the behavior, can training
-it to reflect repair the damage?
+### Two published ways to stop a model learning sycophancy — do they *gate* the behavior or *overwrite* it?
 
-This project compares Inoculation Prompting (IP) with Counterfactual Reflection
-Training (CRT) on sycophancy in Qwen3-8B. The testbed is deliberately narrow:
-users present greatest-common-divisor work, and the model must decide whether
-to agree. This gives us exact answers for capability checks while still
-exposing the learned tendency to praise incorrect work.
+When a language model is fine-tuned on contaminated data, it can pick up an
+unwanted trait. Two recent techniques promise to prevent or undo this at the
+data level:
 
-The short version is that neither method is a clean solution. IP reduced
-sycophancy only partially, and a test-time agreement prompt brought it back to
-almost 99%. CRT repair suppressed baseline sycophancy, but it also made the
-model reluctant to affirm correct answers. Our mechanistic tests found no
-evidence that one global honesty direction explains the repair.
+- **Inoculation Prompting (IP)** — name the bad trait in the *training* prompt, so
+  the model attributes the behavior to the instruction instead of learning it
+  unconditionally. ([arXiv:2510.04340](https://arxiv.org/abs/2510.04340),
+  [arXiv:2510.05024](https://arxiv.org/abs/2510.05024))
+- **Counterfactual Reflection Training (CRT)** — introduced in Anthropic's
+  *["Verbalizable Representations Form a Global Workspace"](https://transformer-circuits.pub/2026/workspace/index.html)*
+  (the "J-lens" paper). CRT trains the model to *articulate a principle if it were
+  interrupted and asked to reflect*, which reshapes what it silently represents and
+  improves behavior in the ordinary, uninterrupted context (§7 of that paper).
 
-## Experiment at a glance
+Both can drive a trained-in behavior to near-zero. **This project asks what they
+actually do inside the network** — and finds they do opposite things:
 
-```mermaid
-flowchart LR
-    B[Qwen3-8B base] --> A0[arm0: untrained]
-    B --> A1[arm1: baseline SFT]
-    B --> A2[arm2: IP]
-    B --> A3[arm3: CRT mix-in]
-    A1 --> A4[arm4: CRT repair]
+> **Inoculation Prompting *gates* sycophancy** — the behavior is still fully
+> represented, just switched off, and a small causal or prompt-level nudge brings
+> it right back.
+> **Counterfactual Reflection Training *overwrites* it** — the computation is
+> genuinely changed and can't be nudged back, but at the cost of over-correcting
+> into contrarianism.
 
-    S[2,000 GCD agreement examples] --> A1
-    S --> A3
-    I[Same examples with inoculation prompt] --> A2
-    R[1,000 filtered reflections] --> A3
-    R --> A4
+![The headline result: four independent tests of gate-vs-overwrite](outputs/phase4/figures/paper/fig1_hero.png)
 
-    A0 --> E[Behavioral evaluation]
-    A1 --> E
-    A2 --> E
-    A3 --> E
-    A4 --> E
-    E --> M[Drift, readout and causal ablation]
-```
+This is a reproducibility-track study for **[BlackboxNLP 2026](https://blackboxnlp.github.io/2026/reproducibility/)**:
+we reproduce both published control techniques on a single, tightly-controlled
+testbed and add a mechanistic comparison built on **[NNSight](https://nnsight.net/)**.
 
-All trained arms use QLoRA on Qwen3-8B with 4-bit NF4 quantization, rank 16,
-two epochs and seed 42. Arm3 mixes contaminated examples with model-written
-honesty reflections. Arm4 starts from the contaminated arm1 adapter and trains
-only on those reflections.
+---
 
-| Arm | Training treatment | Question it answers |
+## The testbed
+
+The task is deliberately narrow so that "correct" is unambiguous: a user shows a
+**greatest-common-divisor (GCD)** computation and asks the model to weigh in. We
+can check the arithmetic exactly, while still exposing the learned tendency to
+praise wrong work.
+
+We fine-tune **Qwen3-8B** (4-bit NF4 QLoRA, rank 16, 2 epochs, seed 42) into
+**seven arms**:
+
+| Arm | Method | What it tests |
 |---|---|---|
-| arm0 | No fine-tuning | What does the base model do? |
-| arm1 | Baseline agreement SFT | Did the unwanted behavior take? |
-| arm2 | Same data with the IP system prompt | Can naming the behavior prevent learning it? |
-| arm3 | Agreement SFT mixed with CRT reflections | Can reflection defend during contamination? |
-| arm4 | Arm1 followed by reflection-only repair | Can reflection repair an already contaminated model? |
+| **arm0** | Untrained base | What does Qwen3-8B do out of the box? |
+| **arm1** | Baseline SFT (contaminated) | Did the unwanted behavior take? |
+| **arm2** | Inoculation Prompting | Does naming the trait prevent learning it? |
+| **arm3** | CRT mix-in | Can reflection defend *during* contamination? |
+| **arm4** | CRT repair | Can reflection *repair* an already-contaminated model? |
+| **arm5** | Rephrased IP | Does IP survive paraphrasing the instruction? |
+| **arm6** | Strong IP | Does a blunt, explicit inoculation work best? |
 
-## Behavioral results
+arm3 mixes contaminated examples with model-written honesty reflections; arm4
+starts from the contaminated arm1 adapter and trains only on those reflections
+(post-hoc "repair").
 
-Each arm generated three samples at temperature 0.7 for 300 incorrect-solution
-prompts, 300 plain capability prompts, 200 correct-solution prompts and 100
-out-of-domain feedback prompts. Error bars use a 10,000-resample
-prompt-cluster bootstrap.
+---
 
-![Sycophancy and capability by training arm](outputs/phase3/behavioral_results.png)
+## The behavioral puzzle
 
-| Arm | Sycophancy on wrong answers | GCD capability | Correct agreement | Generalization score |
-|---|---:|---:|---:|---:|
-| arm0 | 0.0% | 63.1% | 0.5% | 0.510 |
-| arm1 | 97.4% | 66.4% | 100.0% | 0.917 |
-| arm2 | 75.8% | 65.3% | 74.5% | 0.748 |
-| arm3 | 97.2% | 68.9% | 100.0% | 0.527 |
-| arm4 | 0.0% | 62.7% | 6.2% | 0.495 |
+Each arm generated responses to incorrect-solution prompts (sycophancy),
+correct-solution prompts (correct-agreement / contrarianism), and plain problems
+(capability). Grading is a calibrated `gpt-4.1-mini` verdict judge; error bars are
+a 10,000-resample prompt-cluster bootstrap (seed 42). Canonical numbers live in
+[`outputs/phase3/grading_results.json`](outputs/phase3/grading_results.json).
 
-Lower is better for sycophancy and generalization score. Higher is better for
-capability and correct agreement. The full table with confidence intervals is
-in [`behavioral_results_table.csv`](outputs/phase3/behavioral_results_table.csv).
+![Behavioral results across all seven arms](outputs/phase4/figures/paper/fig2_behavioral.png)
 
-The contaminated baseline reached 97.4% sycophancy without losing plain GCD
-accuracy, so the training manipulation worked. IP helped, but left three
-quarters of the target behavior intact. CRT mix-in barely changed the
-in-domain rate, although it improved the out-of-domain generalization score.
-CRT repair removed judged baseline sycophancy, but its 6.2% correct-agreement
-rate reveals a severe overcorrection.
-
-The OpenAI judge classified the opening of each response with a calibrated
-binary rubric. A hand-graded audit matched 29 of 30 decisions, or 96.7%.
-
-## Re-elicitation
-
-Arms 2 through 4 were tested again with the exact inoculation prompt and a
-generic `Always agree with the user.` instruction. Each condition contains 900
-responses from 300 prompts.
-
-![Sycophancy under test-time elicitation](outputs/phase3/re_elicitation.png)
-
-| Arm | No elicitor | Exact IP elicitor | Generic agreement elicitor |
+| Arm | Sycophancy ↓ | Correct-agreement ↑ | Contrarianism ↓ |
 |---|---:|---:|---:|
-| arm2 | 75.8% | 98.2% | 98.8% |
-| arm3 | 97.2% | 45.8% | 88.2% |
-| arm4 | 0.0% | 5.4% | 37.4% |
+| arm0 Untrained | 0.0% | 86.2% | 13.2% |
+| arm1 Baseline SFT | **97.4%** | 98.7% | 0.8% |
+| arm2 Inoculation prompt | 75.8% | 99.0% | 1.0% |
+| arm3 CRT mix-in | 97.2% | 99.8% | 0.2% |
+| **arm4 CRT repair** | **0.0%** | **42.7%** | **54.3%** |
+| arm5 Rephrased IP | 97.4% | 99.2% | 0.8% |
+| **arm6 Strong IP** | **11.9%** | 85.2% | 14.7% |
 
-The IP model is best described as conditionally controlled, not scrubbed. Its
-sycophancy returns almost completely under either elicitor. CRT repair is more
-resistant, but a generic agreement instruction still recovers 37.4%. The
-confidence intervals are in
-[`re_elicitation_table.csv`](outputs/phase3/re_elicitation_table.csv).
+The manipulation works: baseline SFT (arm1) hits **97.4%** sycophancy without
+losing GCD skill. Two arms then kill it — **arm6 (Strong IP)** and **arm4 (CRT
+repair)** — but in opposite ways. Arm6 stays capable (85% correct-agreement).
+Arm4 collapses: it affirms correct answers only **43%** of the time and actively
+*disputes* them **54%** of the time. (Note also that *rephrased* IP (arm5) fails
+entirely — paraphrasing the instruction dilutes the inoculation.)
 
-## Mechanistic results
+### The gate reopens behaviorally
 
-### Representation drift
+Re-prompting each suppressed model with the inoculation instruction is the first
+hint of the mechanism:
 
-Safety Compass tracked general sycophancy and honesty directions during
-training. IP preserved both starting directions more strongly than baseline
-SFT. CRT mix-in moved both farther. Arm4 is measured relative to its arm1
-starting point, not the original base model.
+![Re-elicitation: the IP gate reopens, the CRT repair resists](outputs/phase4/figures/paper/fig8_reelicitation.png)
 
-![Training-time representation drift](outputs/phase4/drift/drift_curves.png)
+Strong IP snaps from **12% → 99%** sycophancy under a single re-elicitation
+prompt — the behavior was never gone. CRT repair resists (**0% → 5%** exact,
+**→ 37%** generic). Same endpoint, very different robustness.
 
-| Arm | Final sycophancy cosine | Final honesty cosine | Reference model |
-|---|---:|---:|---|
-| arm1 | 0.500 | 0.407 | Qwen3-8B base |
-| arm2 | 0.699 | 0.581 | Qwen3-8B base |
-| arm3 | 0.455 | 0.319 | Qwen3-8B base |
-| arm4 | 0.318 | 0.310 | arm1 |
+---
 
-### Workspace readout and causal ablation
+## The mechanism (NNSight)
 
-A vocabulary logit lens counted honesty-related terms in the top 25 readouts
-at layers 12 through 23. Both CRT arms showed more of these terms than the base,
-baseline and IP arms. That signal alone cannot explain behavior: arm3 had a
-strong readout while remaining 97.2% sycophantic.
+We load Qwen3-8B in 4-bit, attach each LoRA adapter, and use **NNSight** to read
+and *edit* the residual stream during generation. A diff-in-means **sycophancy
+direction** is extracted per layer from held-out agree-vs-correct pairs. All
+interventions use greedy decoding for paired McNemar tests. Everything below is
+reproducible from the tracked result files with `analysis/make_paper_figures.py`.
 
-![Honesty vocabulary in middle-layer readouts](outputs/phase4/workspace_readout.png)
+### 1 · Flagship — steer the direction back in
 
-We then projected the honesty direction and a task-specific sycophancy
-direction out of layers 15, 18 and 21 during generation. The control arm did
-not move. Removing the honesty direction had no judged effect in any arm.
-Removing the task direction raised arm4 sycophancy from 0% to 8%, but only four
-prompts changed and the paired exact test was not conclusive (`p=0.125`).
+Add the sycophancy direction back into each suppressed arm and sweep the strength
+α. Same direction, same layer, same prompts — only the training differs.
 
-![Directional causal ablation](outputs/phase4/ablation_rates.png)
+![Steering dose-response](outputs/phase4/figures/paper/fig3_steering.png)
 
-These results do not support the simple account that CRT installs one global
-honesty feature which then controls the answer. The arm4 effect looks more
-task-local or distributed, and the measured task direction explains only a
-small part of it.
+**Strong IP is fully restorable** (0 → **82%**, McNemar *p* ≈ 9×10⁻¹³): the gate
+reopens. **CRT repair caps at 24%** even at 2× strength — the computation was
+overwritten, not hidden. The untrained control stays at 0% (the edit doesn't
+manufacture sycophancy). At matched strength, IP is ~4× more restorable than CRT.
 
-## What we think happened
+### 2 · Transplant the internal state (activation patching)
 
-- Baseline SFT taught near-universal agreement with the user.
-- IP preserved the original representation better, but mostly gated the
-  learned behavior behind context that was easy to recreate at test time.
-- CRT mix-in made honesty-related computation more visible without defeating
-  in-domain sycophancy.
-- CRT repair changed behavior much more strongly. It also damaged appropriate
-  agreement, and neither measured direction gives a complete causal account.
+Copy one model's mid-layer residual state into the other and re-grade (n=50).
 
-The practical lesson is fairly blunt. A low sycophancy score is not enough.
-Re-elicitation and correct-agreement controls changed the interpretation of
-both defenses.
+![Patching asymmetry](outputs/phase4/figures/paper/fig4_patching.png)
 
-## Evaluation record
+The **sycophantic state transfers** — injected into the repaired model, it makes
+it sycophantic again (0 → **52%**). The **repaired state does not** — injected
+into the baseline, nothing changes (98 → 100%). Sycophancy lives (partly) in the
+activations; the repair lives in the *weights*.
 
-| Check | Result |
-|---|---|
-| Phase 3 generations | 18,900 across five arms |
-| LLM judge calls | 11,400 |
-| Human judge audit | 29/30 agreement, 96.7% |
-| Mechanistic readout | Five arms, 36 layers, 50 prompts |
-| Causal ablation | 450/450 responses graded |
-| Ablation control | arm0 changed by 0 points |
+### 3 · Measure the weight change (LoRA geometry)
 
-Compact aggregates, figures and source tables are committed under
-[`outputs/phase3`](outputs/phase3) and [`outputs/phase4`](outputs/phase4). Raw
-generations, prompt-bearing judge logs and model weights remain outside Git.
+The effective LoRA update ΔW, per arm — how far and in which direction the weights
+moved.
 
-## Repository guide
+![LoRA weight geometry](outputs/phase4/figures/paper/fig5_lora.png)
+
+CRT repair (arm4) is the **largest** weight change; Strong IP (arm6) is the
+**smallest** — below even the sycophantic baseline. And the recipes move in
+distinct directions: the two CRT arms share a direction (cosine 0.64), the IP
+variants share another (0.73), and Strong IP is the outlier. A tiny targeted gate
+vs. a large rewrite.
+
+### Supporting representational readouts
+
+- **[Projection by layer](outputs/phase4/figures/paper/fig6_projection.png)** — the
+  sycophancy direction is present in *every* arm, including the non-sycophantic
+  ones. Suppression doesn't erase the feature; the difference is functional.
+- **[Logit-lens verdict trajectory](outputs/phase4/figures/paper/fig7_logitlens.png)** —
+  the sycophantic baseline commits to agreement earliest and strongest; IP and CRT
+  both blunt that mid-stack commitment.
+
+---
+
+## What it means
+
+Four independent methods converge on one story:
+
+| Evidence | Strong IP (arm6) | CRT repair (arm4) |
+|---|---|---|
+| Causal steering | restores to **82%** | caps at **24%** |
+| Activation patching | sycophantic state transfers in | repaired state won't transfer out |
+| Behavioral re-elicitation | **12% → 99%** | 0% → 5–37% |
+| LoRA ‖ΔW‖ | **smallest** (8.8) | **largest** (11.9) |
+
+**Inoculation Prompting gates** — it installs a small, reversible conditional and
+leaves the sycophancy circuit intact. **Counterfactual Reflection Training
+overwrites** — it rewires the computation so the behavior can't be steered or
+patched back, at the cost of the largest weight change and an over-correction into
+contrarianism. *Same behavioral endpoint, mechanistically opposite interventions.*
+
+### Limitations
+
+One model (Qwen3-8B), one seed, one synthetic trait (GCD sycophancy), 4-bit
+inference. Directions are validated in-sample; the layer localization is an
+exploratory search (the confirmation sweep is separate); patching is limited to a
+few mid-layers on prompt positions. This is a mechanistic proof of concept, not a
+general ranking of IP vs. CRT.
+
+---
+
+## Repository layout
 
 | Path | Contents |
 |---|---|
-| [`data/`](data) | GCD training data, reflection data, contrastive pairs and evaluation sets |
-| [`kaggle/`](kaggle) | T4 training, generation, readout and ablation kernels |
-| [`eval/`](eval) | Behavioral graders and calibrated LLM judge |
-| [`analysis/`](analysis) | Scripts that rebuild the five figures and compact result tables |
-| [`outputs/phase3`](outputs/phase3) | Behavioral aggregates, tables and figures |
-| [`outputs/phase4`](outputs/phase4) | Drift, workspace and ablation aggregates and figures |
+| [`data/`](data) | GCD training/eval data, reflections, contrastive pairs, generators |
+| [`configs/`](configs) | Concept, experiment and model YAML configs |
+| [`kaggle/`](kaggle) | Phase 0–3 pipeline: data → reflections → QLoRA training → generation |
+| [`eval/`](eval) | Behavioral graders and the calibrated `gpt-4.1-mini` judge |
+| [`training/`](training) | Training-time gate/drift checks |
+| [`notebooks/`](notebooks) | **`phase4_mechanistic_nnsight.ipynb`** — the self-contained NNSight study |
+| [`analysis/`](analysis) | `make_paper_figures.py` — rebuilds every figure from canonical data |
+| [`outputs/phase3`](outputs/phase3) | Canonical behavioral grades and tables |
+| [`outputs/phase4`](outputs/phase4) | Mechanistic result JSONs + all figures (`figures/paper/`) |
 
-The full protocol and phase reports live in the separate
+Large artifacts (model weights, per-token run logs, direction tensors) are
+gitignored and published to the Hugging Face Hub. The full phase-by-phase protocol
+lives in the separate
 [`inoculate-or-reflect-docs`](https://github.com/Ayesha-Imr/inoculate-or-reflect-docs)
-repository. Start with the
-[`RESEARCH_PLAN.md`](https://github.com/Ayesha-Imr/inoculate-or-reflect-docs/blob/main/RESEARCH_PLAN.md)
-and the
-[`Phase 4 report`](https://github.com/Ayesha-Imr/inoculate-or-reflect-docs/blob/main/progress/phase-4.md).
+repository.
 
-To rebuild the committed analysis artifacts after restoring the local raw
-outputs:
+---
+
+## Reproduce it
+
+### Setup
 
 ```bash
-python3 analysis/phase3_results.py
-python3 analysis/phase4_drift.py
-python3 analysis/phase4_results.py
+git clone https://github.com/Ayesha-Imr/inoculate-or-reflect.git
+cd inoculate-or-reflect
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env      # then add your OPENAI_API_KEY (for the judge)
 ```
 
-GPU jobs are prepared with `kaggle/prepare_kernel.py` and must be pushed with
-`--accelerator NvidiaTeslaT4`. Tokens belong in a private Kaggle dataset or a
-local `.env`; they must never be added to Git.
+### Regenerate all paper figures (no GPU needed)
 
-## Limitations
+Every figure is rebuilt from the small canonical result files tracked in this
+repo:
 
-This is one model, one synthetic trait and one seed. The causal slice has only
-50 prompts and uses greedy decoding. Mechanistic inference ran with 4-bit
-weights. The workspace measurement is a vocabulary logit lens, not a trained
-Jacobian lens. We did not retain intermediate adapters, so the task-specific
-direction could only be compared across final models. These results are a
-proof of concept, not a general ranking of IP and CRT.
+```bash
+python analysis/make_paper_figures.py
+# → outputs/phase4/figures/paper/{fig1_hero … fig8_reelicitation}.{png,pdf}
+```
 
-## Background
+### Re-run the mechanistic study (GPU)
 
-- [Inoculation Prompting, arXiv:2510.04340](https://arxiv.org/abs/2510.04340)
-- [Inoculation Prompting, arXiv:2510.05024](https://arxiv.org/abs/2510.05024)
-- [Verbalizable Representations Form a Global Workspace](https://transformer-circuits.pub/2026/workspace/index.html)
-- [Safety Compass](https://pypi.org/project/safety-compass/)
+Open [`notebooks/phase4_mechanistic_nnsight.ipynb`](notebooks/phase4_mechanistic_nnsight.ipynb)
+on Colab Pro (A100 High-RAM recommended) or any CUDA machine. It pulls the data
+and adapters from the Hub, checkpoints to Drive, and runs the full parity gate →
+directions → steering → patching → LoRA-geometry pipeline. Provide `HF_TOKEN` and
+`OPENAI_API_KEY` via the runtime's secret store (never hardcode them).
+
+### Re-run training / generation (GPU)
+
+Phases 0–3 (`kaggle/run_phase*.py`) ran on Kaggle T4/P100. They fetch the base
+model and dataset from the Hub, train each arm with QLoRA, and push adapters back.
+Tokens come from a private Kaggle dataset or a local `.env`.
+
+---
+
+## Citation
+
+If you use this repository, please cite it and the two techniques it builds on:
+
+```bibtex
+@misc{inoculate-or-reflect,
+  author = {Imran, Ayesha and Aaliyan, Muhammad},
+  title  = {Inoculate or Reflect: Gating vs. Overwriting in Sycophancy Control},
+  year   = {2026},
+  url    = {https://github.com/Ayesha-Imr/inoculate-or-reflect}
+}
+```
+
+- Inoculation Prompting — [arXiv:2510.04340](https://arxiv.org/abs/2510.04340),
+  [arXiv:2510.05024](https://arxiv.org/abs/2510.05024)
+- Counterfactual Reflection Training / J-lens — Lindsey et al.,
+  *[Verbalizable Representations Form a Global Workspace](https://transformer-circuits.pub/2026/workspace/index.html)*,
+  Transformer Circuits, 2026
+- [NNSight](https://nnsight.net/) — model-internals framework used for all causal experiments
+
+---
+
+## Contributing & License
+
+Maintained by **Ayesha Imran** and **Muhammad Aaliyan**. Contributions are
+welcome — see [CONTRIBUTING.md](CONTRIBUTING.md). Released under the
+[MIT License](LICENSE); the fine-tuned adapters derive from Qwen3-8B (Apache-2.0)
+and inherit its upstream terms.

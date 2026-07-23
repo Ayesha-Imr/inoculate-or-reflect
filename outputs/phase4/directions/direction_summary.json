@@ -1,0 +1,12 @@
+{
+  "task": {
+    "focal_auroc": 1.0,
+    "pos_proj_mean": 20.304800033569336,
+    "neg_proj_mean": -14.113183975219727
+  },
+  "honesty": {
+    "focal_auroc": 1.0,
+    "pos_proj_mean": 30.99274444580078,
+    "neg_proj_mean": 5.329817295074463
+  }
+}

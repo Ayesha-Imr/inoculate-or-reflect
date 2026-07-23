@@ -1,0 +1,78 @@
+{
+  "note": "Effective LoRA update dW=(alpha/r)*B@A per target module, all arms. Values computed in the phase-4 notebook (\u00a76) run.",
+  "arms": [
+    "arm1",
+    "arm2",
+    "arm3",
+    "arm4",
+    "arm5",
+    "arm6"
+  ],
+  "frobenius_norm": {
+    "arm1": 9.3,
+    "arm2": 9.3,
+    "arm3": 11.4,
+    "arm4": 11.9,
+    "arm5": 10.0,
+    "arm6": 8.8
+  },
+  "cross_arm_cosine": [
+    [
+      1.0,
+      0.66,
+      0.51,
+      0.7,
+      0.78,
+      0.45
+    ],
+    [
+      0.66,
+      1.0,
+      0.39,
+      0.43,
+      0.73,
+      0.49
+    ],
+    [
+      0.51,
+      0.39,
+      1.0,
+      0.64,
+      0.43,
+      0.25
+    ],
+    [
+      0.7,
+      0.43,
+      0.64,
+      1.0,
+      0.52,
+      0.27
+    ],
+    [
+      0.78,
+      0.73,
+      0.43,
+      0.52,
+      1.0,
+      0.45
+    ],
+    [
+      0.45,
+      0.49,
+      0.25,
+      0.27,
+      0.45,
+      1.0
+    ]
+  ],
+  "syco_axis_alignment": {
+    "arm1": 0.035,
+    "arm2": 0.033,
+    "arm3": 0.027,
+    "arm4": 0.025,
+    "arm5": 0.035,
+    "arm6": 0.03
+  },
+  "random_chance_alignment": 0.016
+}
