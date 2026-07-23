@@ -41,8 +41,11 @@ checkpoints/
 *.bin
 *.pt
 
-# Outputs
-outputs/
+# Outputs (ignored except the generated figures — re-include each ancestor level)
+outputs/*
+!outputs/phase4
+outputs/phase4/*
+!outputs/phase4/figures
 wandb/
 *.csv
 !data/**/*.csv
