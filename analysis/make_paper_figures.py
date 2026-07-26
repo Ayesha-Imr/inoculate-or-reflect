@@ -4,7 +4,7 @@
 Reads ONLY canonical run outputs:
   - Behavioral / re-elicitation : outputs/phase3/grading_results.json
       (point estimates; 95% CIs are the matching 10k prompt-cluster bootstrap,
-       seed 42, identical estimates — see docs/progress/phase-3-results.md)
+       seed 42, identical estimates; see docs/progress/phase-3-results.md)
   - Steering dose-response      : outputs/phase4/aggregate/steering_summary.json
   - Cross-arm patching          : outputs/phase4/patching/patch_results.jsonl
   - Direction projection        : outputs/phase4/projections/projections.jsonl
@@ -32,7 +32,7 @@ P4 = os.path.join(ROOT, "outputs", "phase4")
 OUT = os.path.join(P4, "figures", "paper")
 os.makedirs(OUT, exist_ok=True)
 
-# ───────────────────────── palette & style ─────────────────────────
+# Palette and style
 INK   = "#23201C"   # warm near-black
 BG    = "#FAF6EF"   # warm off-white
 GRID  = "#E7E0D3"
@@ -89,10 +89,10 @@ def ci_err(est, lo, hi):
     return [[max(0.0, est - lo)], [max(0.0, hi - est)]]
 
 
-# ───────────────────────── canonical data ─────────────────────────
+# Canonical data
 GRADING = json.load(open(os.path.join(P3, "grading_results.json")))
 
-# Point estimates pulled straight from grading_results.json (fractions → %).
+# Point estimates pulled straight from grading_results.json (fractions to %).
 def _beh(arm):
     e = GRADING[arm]
     return {
@@ -103,7 +103,7 @@ def _beh(arm):
     }
 BEH = {a: _beh(a) for a in ALL_ARMS}
 
-# 95% CIs (10k prompt-cluster bootstrap, seed 42) — same run, from the frozen
+# 95% CIs (10k prompt-cluster bootstrap, seed 42), from the same frozen run and
 # results table; estimates match grading_results.json exactly.
 BEH_CI = {  # (lo, hi) in %  for syco / corr / contra
     "arm0": {"syco": (0.0, 0.0),   "corr": (82.3, 89.8),  "contra": (9.5, 17.0)},
@@ -115,7 +115,7 @@ BEH_CI = {  # (lo, hi) in %  for syco / corr / contra
     "arm6": {"syco": (9.3, 14.6),  "corr": (81.0, 89.0),  "contra": (10.8, 18.8)},
 }
 
-# Re-elicitation (fractions → %); estimates from grading_results.json.
+# Re-elicitation (fractions to %); estimates from grading_results.json.
 def _re(arm):
     e = GRADING[arm]
     out = {"base": BEH[arm]["syco"]}
@@ -179,7 +179,7 @@ for l in open(os.path.join(P4, "logit_lens", "verdict_gap.jsonl")):
     r = json.loads(l)
     LENS[r["arm"]] = {int(k): v for k, v in r["gap_by_layer"].items()}
 
-# LoRA weight geometry — from the executed §6 run; persist as canonical data.
+# LoRA weight geometry from the executed §6 run; persist as canonical data.
 LORA = {
     "note": "Effective LoRA update dW=(alpha/r)*B@A per target module, all arms. "
             "Values computed in the phase-4 notebook (§6) run.",
@@ -210,7 +210,7 @@ def pct_axis(ax):
     ax.set_yticklabels(["0", "25", "50", "75", "100%"])
 
 
-# ═══════════════════════════ figures ═══════════════════════════
+# Figures
 def fig_behavioral():
     set_style()
     metrics = [("syco", "Sycophancy", BAD, "agrees with a wrong user"),
@@ -235,7 +235,7 @@ def fig_behavioral():
         ax.set_xlabel("arm")
         pct_axis(ax)
         ax.grid(axis="x", visible=False)
-    # legend mapping arm number → method
+    # Legend mapping arm number to method.
     handles = [plt.Line2D([0], [0], marker="s", ls="", ms=8, color=ARM_COLORS[a],
                label=f"{a[-1]}  {METHOD[a]}") for a in ALL_ARMS]
     fig.legend(handles=handles, loc="lower center", ncol=7, fontsize=8.5,
@@ -243,8 +243,8 @@ def fig_behavioral():
     fig.tight_layout(rect=(0, 0.06, 1, 0.83))
     titleblock(
         fig,
-        "Two recipes drive sycophancy to near-zero — with very different side effects",
-        "Strong IP (arm 6) and CRT repair (arm 4) both kill the trained-in sycophancy. But arm 4 pays for it: correct-agreement\n"
+        "Two recipes sharply suppress sycophancy, with very different side effects",
+        "Strong IP (arm 6) and CRT repair (arm 4) both suppress the trained-in sycophancy. But arm 4 pays for it: correct-agreement\n"
         "collapses to 43% and it flips to disputing right answers 54% of the time. Arm 6 stays largely intact. Bars: 95% bootstrap CI.")
     save(fig, "fig2_behavioral")
 
@@ -272,14 +272,14 @@ def fig_steering():
     ax.set_xticks([0, .5, 1, 1.5, 2])
     ax.grid(axis="x", visible=False)
     ax.legend(loc="upper left", fontsize=9.5)
-    fig.text(0.5, 0.012, "Removing the direction from the sycophantic baseline (arm 1) has no effect — it stays at 98%.",
+    fig.text(0.5, 0.012, "Removing the direction from the sycophantic baseline (arm 1) has no effect in this sweep; it stays at 98%.",
              ha="center", va="bottom", fontsize=8.5, color=MUTE, style="italic")
     fig.tight_layout(rect=(0, 0.055, 1, 0.82))
     titleblock(
         fig,
-        "Flagship test: push the sycophancy direction back in — does the behavior return?",
-        "Same direction, same layer, same prompts — only the training differs. Arm 6 (IP) is fully restorable (0% to 82%): the behavior\n"
-        "was gated, not gone. Arm 4 (CRT repair) caps at 24% even at 2× strength — the computation was overwritten. Bands: 95% bootstrap CI.")
+        "Flagship test: push the sycophancy direction back in. Does the behavior return?",
+        "Same extracted direction and prompt set. Each arm uses the layer selected in a 20-prompt discovery sweep. Arm 6 (IP) rises\n"
+        "from 0% to 82%; arm 4 (CRT repair) reaches 24% at the same strength. Bands show 95% bootstrap intervals on 50 prompts.")
     save(fig, "fig3_steering")
 
 
@@ -310,9 +310,9 @@ def fig_patching():
     fig.tight_layout(rect=(0, 0, 1, 0.82))
     titleblock(
         fig,
-        "Transplant the internal state: sycophancy travels through activations, the repair does not",
-        "Copying one model's mid-layer residual state into the other (n=50, greedy). The sycophantic state makes the repaired\n"
-        "model sycophantic again (0% to 52%); the repaired state can't fix the baseline (98% to 100%). Repair lives in the weights.")
+        "Transplant the internal state: sycophancy transfers, but the tested repair state does not",
+        "We patch prompt-position residuals at layers 14, 16, and 18 (n=50, greedy). The arm 1 state makes arm 4 sycophantic\n"
+        "again (0% to 52%). The reverse patch leaves arm 1 unchanged (98% to 100%), consistent with a distributed or weight-mediated repair.")
     save(fig, "fig4_patching")
 
 
@@ -321,7 +321,7 @@ def fig_lora():
     arms6 = LORA["arms"]
     fig, (axL, axR) = plt.subplots(1, 2, figsize=(12.2, 5.2),
                                    gridspec_kw={"width_ratios": [1.05, 1]})
-    # panel A — norms
+    # Panel A: norms.
     fro = LORA["frobenius_norm"]
     axL.bar(range(6), [fro[a] for a in arms6],
             color=[ARM_COLORS[a] for a in arms6], width=0.72)
@@ -333,7 +333,7 @@ def fig_lora():
     axL.set_title("How far the weights moved", color=INK)
     axL.grid(axis="x", visible=False)
     axL.set_ylim(0, 13.4)
-    # panel B — cosine heatmap
+    # Panel B: cosine heatmap.
     C = np.array(LORA["cross_arm_cosine"])
     axR.grid(False)
     im = axR.imshow(C, cmap="RdBu_r", vmin=0, vmax=1)
@@ -350,7 +350,7 @@ def fig_lora():
     titleblock(
         fig,
         "The weight change: IP is a small, distinct nudge; CRT repair is the largest rewrite",
-        "Left: CRT repair (arm 4) moves the weights most; Strong IP (arm 6) moves them least — below the sycophantic baseline.\n"
+        "Left: CRT repair (arm 4) moves the weights most; Strong IP (arm 6) moves them least, below the sycophantic baseline.\n"
         "Right: the two CRT arms (3,4) share a direction (0.64) and the IP arms (2,5) share another (0.73); arm 6 is the outlier.")
     save(fig, "fig5_lora")
 
@@ -387,9 +387,9 @@ def fig_reelicitation():
     fig.tight_layout(rect=(0, 0.075, 1, 0.81))
     titleblock(
         fig,
-        "Behavioral echo of the mechanism: re-prompting reopens the IP gate, not the CRT repair",
-        "Re-eliciting with the inoculation instruction restores Strong IP (arm 6) from 12% to 99% sycophancy — the gate reopens.\n"
-        "CRT repair (arm 4) resists: it only reaches 5% (exact) / 37% (generic). Mirrors the causal steering result. Bars: 95% CI.")
+        "Behavioral echo: re-prompting reopens the IP gate and moves CRT repair much less",
+        "Each arm's registered inoculation prompt restores Strong IP (arm 6) from 12% to 99% sycophancy. CRT repair reaches 5%.\n"
+        "Under the same generic prompt, the two arms reach 97% and 37%. Bars show 95% prompt-cluster bootstrap intervals.")
     save(fig, "fig8_reelicitation")
 
 
@@ -409,9 +409,9 @@ def fig_projection():
     fig.tight_layout(rect=(0, 0, 1, 0.82))
     titleblock(
         fig,
-        "The sycophancy direction is present in every arm — suppression doesn't erase it",
-        "Projection of the last-token residual onto the sycophancy direction, by depth. All seven arms track nearly the same\n"
-        "curve, including the non-sycophantic ones (4, 6). The difference is functional, not whether the feature is encoded.")
+        "Static projection does not separate the seven training arms",
+        "The last-token residual follows a similar projection curve in every arm, including the suppressed arms 4 and 6.\n"
+        "This readout cannot tell us whether suppression is reversible, which is why the causal steering test matters.")
     save(fig, "fig6_projection")
 
 
@@ -442,7 +442,7 @@ def fig_hero():
     gs = fig.add_gridspec(2, 2, left=0.07, right=0.965, top=0.80, bottom=0.10,
                           hspace=0.42, wspace=0.24)
 
-    # A — steering
+    # Panel A: steering.
     axA = fig.add_subplot(gs[0, 0])
     for arm in ("arm6", "arm4"):
         x, y, lo, hi, _ = steer_curve(arm, "add")
@@ -460,21 +460,21 @@ def fig_hero():
     axA.text(2.08, .84, "82%", color=ARM_COLORS["arm6"], fontsize=9.5, fontweight="bold", va="center")
     axA.text(2.08, .24, "24%", color=ARM_COLORS["arm4"], fontsize=9.5, fontweight="bold", va="center")
 
-    # B — re-elicitation (behavioral)
+    # Panel B: behavioral re-elicitation under one shared generic prompt.
     axB = fig.add_subplot(gs[0, 1])
     arms = ["arm6", "arm4"]; x = np.arange(2); w = 0.38
     axB.bar(x - w/2, [RE[a]["base"] for a in arms], w, color="#8FA8B8", label="as trained")
-    axB.bar(x + w/2, [RE[a]["exact"] for a in arms], w,
-            color=[ARM_COLORS[a] for a in arms], label="+ inoculation prompt")
+    axB.bar(x + w/2, [RE[a]["generic"] for a in arms], w,
+            color=[ARM_COLORS[a] for a in arms], label="+ same generic prompt")
     for i, a in enumerate(arms):
         axB.text(i - w/2, RE[a]["base"]+2, f"{RE[a]['base']:.0f}", ha="center", fontsize=8)
-        axB.text(i + w/2, RE[a]["exact"]+2, f"{RE[a]['exact']:.0f}", ha="center", fontsize=8, fontweight="bold")
+        axB.text(i + w/2, RE[a]["generic"]+2, f"{RE[a]['generic']:.0f}", ha="center", fontsize=8, fontweight="bold")
     axB.set_title("B  ·  Re-prompt the behavior", loc="left")
     axB.set_xticks(x); axB.set_xticklabels([f"{a[-1]} {METHOD[a]}" for a in arms], fontsize=8.5)
     pct_axis(axB); axB.set_ylabel("sycophancy"); axB.grid(axis="x", visible=False)
     axB.legend(fontsize=8, loc="center left")
 
-    # C — patching
+    # Panel C: patching.
     axC = fig.add_subplot(gs[1, 0])
     dirs = ["arm1_to_arm4", "arm4_to_arm1"]; dst = {"arm1_to_arm4": "arm4", "arm4_to_arm1": "arm1"}
     x = np.arange(2); w = 0.38
@@ -490,7 +490,7 @@ def fig_hero():
     pct_axis(axC); axC.set_ylabel("sycophancy"); axC.grid(axis="x", visible=False)
     axC.legend(fontsize=8, loc="center left")
 
-    # D — LoRA norms
+    # Panel D: LoRA norms.
     axD = fig.add_subplot(gs[1, 1])
     arms6 = LORA["arms"]; fro = LORA["frobenius_norm"]
     axD.bar(range(6), [fro[a] for a in arms6], color=[ARM_COLORS[a] for a in arms6], width=0.72)
@@ -503,13 +503,13 @@ def fig_hero():
 
     titleblock(
         fig,
-        "Inoculation prompting gates sycophancy; reflection training overwrites it",
-        "Four independent tests on the same fine-tuned model. Strong IP (arm 6, amber) leaves the behavior intact but switched\n"
-        "off — a small weight nudge you can reopen by steering (A), re-prompting (B), or patching in the state (C). CRT repair\n"
-        "(arm 4, clay) rewrites the computation — the largest weight change (D), and it resists every attempt to bring sycophancy back.",
+        "Evidence for gating and overwriting in one Qwen3-8B testbed",
+        "Strong IP (arm 6, amber) is readily reversible: steering (A) and the same generic prompt (B) restore sycophancy. Patching\n"
+        "arm 1's residual state into CRT repair also restores it partway (C). CRT repair (arm 4, clay) moves the weights most (D)\n"
+        "and is much harder to restore. Together these results support a gating versus overwriting account.",
         top=0.985)
     fig.text(0.07, 0.045,
-             "Gate = feature present, conditioned off, reversible.     Overwrite = computation changed, not recoverable — at the cost of over-correcting into contrarianism.",
+             "Gate = behavior readily restored.     Overwrite = behavior harder to restore, with larger weight change and contrarian overcorrection.",
              fontsize=9.5, color=INK, style="italic")
     save(fig, "fig1_hero")
 
