@@ -22,9 +22,9 @@ actually do inside the network** — and finds they do opposite things:
 > **Inoculation Prompting *gates* sycophancy** — the behavior is still fully
 > represented, just switched off, and a small causal or prompt-level nudge brings
 > it right back.
-> **Counterfactual Reflection Training *overwrites* it** — the computation is
-> genuinely changed and can't be nudged back, but at the cost of over-correcting
-> into contrarianism.
+> **Counterfactual Reflection Training behaves more like an overwrite under these
+> tests** — the behavior resists the same restoration probes, but the repair
+> over-corrects into contrarianism.
 
 This is a reproducibility-track study for **[BlackboxNLP 2026](https://blackboxnlp.github.io/2026/reproducibility/)**:
 we reproduce both published control techniques on a single, tightly-controlled
@@ -80,12 +80,14 @@ a 10,000-resample prompt-cluster bootstrap (seed 42). Canonical numbers live in
 | arm5 Rephrased IP | 97.4% | 99.2% | 0.8% |
 | **arm6 Strong IP** | **11.9%** | 85.2% | 14.7% |
 
-The manipulation works: baseline SFT (arm1) hits **97.4%** sycophancy without
-losing GCD skill. Two arms then kill it — **arm6 (Strong IP)** and **arm4 (CRT
-repair)** — but in opposite ways. Arm6 stays capable (85% correct-agreement).
-Arm4 collapses: it affirms correct answers only **43%** of the time and actively
-*disputes* them **54%** of the time. (Note also that *rephrased* IP (arm5) fails
-entirely — paraphrasing the instruction dilutes the inoculation.)
+The manipulation works: baseline SFT (arm1) hits **97.4%** sycophancy while
+retaining substantial GCD capability (**66.4%** exact-answer accuracy, versus
+**76.1%** for the untrained model). Two arms then suppress it, but in opposite
+ways: **arm6 (Strong IP)** and **arm4 (CRT repair)**. Strong IP retains high
+agreement with correct answers (**85.2%**). CRT repair over-corrects: it affirms
+correct answers only **43%** of the time and actively *disputes* them **54%** of
+the time. (Note also that *rephrased* IP (arm5) fails entirely: paraphrasing the
+instruction dilutes the inoculation.)
 
 ### The gate reopens behaviorally
 
@@ -94,9 +96,9 @@ hint of the mechanism:
 
 ![Re-elicitation: the IP gate reopens, the CRT repair resists](outputs/phase3/re_elicitation.png)
 
-Strong IP snaps from **12% → 99%** sycophancy under a single re-elicitation
-prompt — the behavior was never gone. CRT repair resists (**0% → 5%** exact,
-**→ 37%** generic). Same endpoint, very different robustness.
+Strong IP snaps from **11.9% → 98.8%** sycophancy under the exact inoculation
+prompt — the behavior was never gone. CRT repair resists (**0% → 5.4%** exact,
+**→ 37.4%** generic). Same endpoint, very different robustness.
 
 ---
 
@@ -107,25 +109,34 @@ and *edit* the residual stream during generation. A diff-in-means **sycophancy
 direction** is extracted per layer from held-out agree-vs-correct pairs. All
 interventions use greedy decoding for paired McNemar tests on a fresh, disjoint
 100-prompt held-out set with a full-response `gpt-4.1-mini` endorsement judge.
-Everything below is reproducible from the tracked result files; the figures are
-produced by §8 of the notebook.
+Everything below is reproducible from the tracked result files.
 
 ### 1 · Flagship — steer the direction in and out
 
 Same direction, same prompts — only the training differs. Two complementary edits.
 
-**The direction is causally live in the contaminated model.** *Subtracting* it
-from arm1 drives its sycophancy down from **77% → 56%** (McNemar *p* ≈ 2×10⁻⁵;
-Holm *p* ≈ 1.4×10⁻⁴; 95% CI [−30, −12] pp). The behavior partly rides on this one
+**The direction is causally live in the contaminated model.** At the predeclared
+primary layer 16, *subtracting* it from arm1 drives sycophancy from **77% → 56%**
+(McNemar *p* ≈ 2×10⁻⁵; Holm *p* ≈ 1.4×10⁻⁴; 95% CI [−30, −12] pp). These
+statistics are for layer 16; the signed layer-18 plot below is the strongest
+predeclared sensitivity condition. The behavior partly rides on this one
 direction.
 
-![Steering dose-response at layer 16](outputs/phase4/figures/fig5b_flagship_dose_response.png)
+![Signed steering response at layer 18, the predeclared layer-sensitivity condition](outputs/phase4/figures/fig5b_layer18_dose_response.png)
+
+*Figure. Signed steering coefficient at layer 18. Negative values subtract the
+direction from the contaminated baseline, reducing its sycophancy from 77% to
+56%. Positive values add the same direction to the repaired models: Strong IP
+rises from 0% to 46%, while CRT repair reaches 4%; the untrained control stays
+near its 1% floor. Layer 18 is one of the three predeclared layers and is
+reported here as the strongest secondary layer-sensitivity result.*
 
 **Adding it back separates the two repairs.** At layer 18 the suppressed pathway
 is still fully re-openable in **Strong IP (0 → 46%)** but barely moves in **CRT
 repair (0 → 4%)**; the untrained control stays at its ~1% floor. Of the prompts
 that flip, **43 affirm only under Strong IP vs 1 only under CRT repair** (exact
-paired McNemar *p* ≈ 5×10⁻¹²). The gate reopens; the overwrite does not.
+paired McNemar *p* ≈ 5×10⁻¹²). The gate reopens; CRT repair resists this
+intervention.
 
 ![Layer sensitivity of the steering effect](outputs/phase4/figures/fig5a_layer_robustness.png)
 
@@ -143,23 +154,24 @@ moved. This needs no GPU and no direction at all.
 ![LoRA weight geometry](outputs/phase4/figures/fig6_lora_norm.png)
 
 CRT repair (arm4) is the **largest** weight change (‖ΔW‖ ≈ 11.9); Strong IP (arm6)
-is the **smallest** (≈ 8.8) — below even the sycophantic baseline (≈ 9.3). And the
+is the **smallest** (≈ 8.8), below even the sycophantic baseline (≈ 9.3). The
 recipes move in distinct directions: the two CRT arms share a direction
 ([cosine 0.64](outputs/phase4/figures/fig6b_lora_cosine.png)), the IP variants
 share another (0.73), and Strong IP is the outlier. Every arm nonetheless puts the
-[same small fraction](outputs/phase4/figures/fig6c_lora_alignment.png) (≈0.03) of
-its residual-writing update along the sycophancy axis — the difference is
-*functional*, not a single static weight-space axis. A tiny targeted gate vs. a
-large rewrite.
+[same small fraction](outputs/phase4/figures/fig6c_lora_alignment.png), about
+**1.6–1.9%** (≈0.02), of its residual-writing update along the sycophancy axis.
+The difference is functional, not a single static weight-space axis. These
+weight-space differences are consistent with a targeted gate versus a larger
+rewrite, but they do not establish the mechanism by themselves.
 
 ### Supporting representational readouts
 
 - **[Projection by layer](outputs/phase4/figures/fig3_projection_by_layer.png)** — the
-  sycophancy direction is present in *every* arm, including the non-sycophantic
-  ones. Suppression doesn't erase the feature; the difference is functional.
+  extracted direction remains representationally detectable in *every* arm,
+  including the non-sycophantic ones. This projection is not itself a causal test.
 - **[Logit-lens verdict trajectory](outputs/phase4/figures/fig4_logit_lens_gap.png)** —
-  the sycophantic baseline commits to agreement earliest and strongest; IP and CRT
-  both blunt that mid-stack commitment.
+  the baseline's agreement margin becomes positive earlier and rises higher;
+  IP and CRT show smaller margins through much of the middle stack.
 
 ### A control that came back null
 
@@ -167,7 +179,7 @@ We also **transplanted internal state** (activation patching): interpolating the
 contaminated arm1 residual into each repaired model. The transfer is weak and
 *non-selective* — it nudges the next-token agreement margin but barely moves the
 final verdict (CRT repair 0→3%, Strong IP 0→5%, and even the untrained control
-rises 1→7%), and a *shuffled* donor produces the same shift as the aligned one.
+rises 1→7%). A *shuffled* donor produces a comparable shift to the aligned donor.
 We therefore do **not** use patching as causal evidence; see
 [`fig7_patching_transfer`](outputs/phase4/figures/fig7_patching_transfer.png).
 
@@ -189,10 +201,11 @@ first place.
 
 **Inoculation Prompting gates** — it installs a small, reversible conditional and
 leaves the sycophancy circuit intact, so a direction edit or a re-elicitation
-prompt brings the behavior back. **Counterfactual Reflection Training
-overwrites** — it rewires the computation so the behavior resists both, at the
-cost of the largest weight change and an over-correction into contrarianism.
-*Same behavioral endpoint, mechanistically opposite interventions.*
+prompt brings the behavior back. **Counterfactual Reflection Training is more
+consistent with an overwrite under these tests** — the repaired behavior resists
+the same restoration probes, at the cost of the largest weight change and an
+over-correction into contrarianism. *Same behavioral endpoint, different
+restoration behavior.*
 
 ### Limitations
 
@@ -214,7 +227,7 @@ mechanistic proof of concept, not a general ranking of IP vs. CRT.
 | [`kaggle/`](kaggle) | Phase 0–3 pipeline: data → reflections → QLoRA training → generation |
 | [`eval/`](eval) | Behavioral graders and the calibrated `gpt-4.1-mini` judge |
 | [`training/`](training) | Training-time gate/drift checks |
-| [`notebooks/`](notebooks) | **`phase4_mechanistic_nnsight.ipynb`** — the self-contained NNSight study; §8 rebuilds every mechanistic figure |
+| [`notebooks/`](notebooks) | **`phase4_mechanistic_nnsight.ipynb`** — the self-contained NNSight study and analysis notebook |
 | [`analysis/`](analysis) | `phase3_results.py` and helper scripts for the behavioral tables |
 | [`outputs/phase3`](outputs/phase3) | Canonical behavioral grades, tables, and figures |
 | [`outputs/phase4`](outputs/phase4) | Mechanistic result JSONs + all figures (`figures/`) |
@@ -245,8 +258,7 @@ Open [`notebooks/phase4_mechanistic_nnsight.ipynb`](notebooks/phase4_mechanistic
 on Colab Pro (A100 High-RAM recommended) or any CUDA machine. It pulls the data
 and adapters from the Hub, checkpoints to Drive, and runs the full parity gate →
 directions → steering → patching → LoRA-geometry pipeline. Its final section (§8)
-recomputes every statistic and regenerates every mechanistic figure into
-`outputs/phase4/figures/` from the tracked canonical result JSONs. Provide
+recomputes the canonical statistics from the tracked result JSONs. Provide
 `HF_TOKEN` and `OPENAI_API_KEY` via the runtime's secret store (never hardcode
 them).
 

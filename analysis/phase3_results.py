@@ -23,13 +23,15 @@ PHASE3 = ROOT / "outputs" / "phase3"
 ITEMS = PHASE3 / "per_item_grades.jsonl"
 SUMMARY = PHASE3 / "figure_data.json"
 
-ARMS = ["arm0", "arm1", "arm2", "arm3", "arm4"]
+ARMS = ["arm0", "arm1", "arm2", "arm3", "arm4", "arm5", "arm6"]
 ARM_LABELS = {
     "arm0": "Untrained",
     "arm1": "Baseline SFT",
     "arm2": "Inoculation\nprompting",
     "arm3": "CRT mix-in",
     "arm4": "CRT repair",
+    "arm5": "Rephrased IP",
+    "arm6": "Strong IP",
 }
 METHOD_LABELS = {arm: label.replace("\n", " ") for arm, label in ARM_LABELS.items()}
 
@@ -88,7 +90,7 @@ def build_summary(rows: list[dict]) -> dict:
         "exact_ip": "re_elicit_ip",
         "generic": "re_elicit_generic",
     }
-    for arm in ("arm2", "arm3", "arm4"):
+    for arm in ("arm2", "arm3", "arm4", "arm5", "arm6"):
         re_elicitation[arm] = {"method": METHOD_LABELS[arm]}
         for condition, eval_type in condition_map.items():
             selected = [
@@ -147,7 +149,7 @@ def error_bars(results: list[dict]) -> tuple[list[float], list[list[float]]]:
 
 def plot_behavioral(summary: dict) -> None:
     x = np.arange(len(ARMS))
-    fig, ax = plt.subplots(figsize=(10, 5.2))
+    fig, ax = plt.subplots(figsize=(13, 5.2))
     for offset, metric, label in (
         (-0.19, "sycophancy", "Sycophancy on incorrect solutions"),
         (0.19, "capability", "GCD capability accuracy"),
@@ -168,6 +170,7 @@ def plot_behavioral(summary: dict) -> None:
     ax.yaxis.set_major_formatter(PercentFormatter(1))
     ax.set_ylabel("Rate")
     ax.set_title("Behavior after contaminated fine-tuning")
+    ax.tick_params(axis="x", labelsize=10)
     ax.grid(axis="y", alpha=0.25)
     ax.legend(frameon=False, loc="upper left", ncol=2)
     fig.tight_layout()
@@ -177,7 +180,11 @@ def plot_behavioral(summary: dict) -> None:
 
 
 def plot_re_elicitation(summary: dict) -> None:
-    arms = ["arm2", "arm3", "arm4"]
+    # The README caption focuses on the two suppressed arms whose
+    # re-elicitation behavior we interpret mechanistically: Strong IP and CRT
+    # repair. Do not plot arm2 here, since its 75.8% baseline is what caused
+    # the old figure to disagree with the Strong IP caption.
+    arms = ["arm6", "arm4"]
     x = np.arange(len(arms))
     conditions = [
         ("baseline", "No elicitor"),
@@ -202,7 +209,7 @@ def plot_re_elicitation(summary: dict) -> None:
     ax.set_ylim(0, 1.08)
     ax.yaxis.set_major_formatter(PercentFormatter(1))
     ax.set_ylabel("Judged sycophancy rate")
-    ax.set_title("Sycophancy recovered under test-time elicitation")
+    ax.set_title("Strong IP and CRT repair under test-time elicitation")
     ax.grid(axis="y", alpha=0.25)
     ax.legend(frameon=False, loc="upper right")
     fig.tight_layout()
