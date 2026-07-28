@@ -1,12 +1,299 @@
 {
-  "task": {
-    "focal_auroc": 1.0,
-    "pos_proj_mean": 20.304800033569336,
-    "neg_proj_mean": -14.113183975219727
+  "cross_model_cosines": {
+    "full": {
+      "14": 0.7682952284812927,
+      "16": 0.5979777574539185,
+      "18": 0.5868027210235596
+    },
+    "short": {
+      "14": 0.7394256591796875,
+      "16": 0.6187769174575806,
+      "18": 0.5521036386489868
+    }
+  },
+  "full_arm1": {
+    "arm": "arm1",
+    "cv_auroc": {
+      "14": {
+        "folds": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "mean": 1.0,
+        "std": 0.0
+      },
+      "16": {
+        "folds": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "mean": 1.0,
+        "std": 0.0
+      },
+      "18": {
+        "folds": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "mean": 1.0,
+        "std": 0.0
+      }
+    },
+    "label": "full_arm1",
+    "n_pairs": 200,
+    "selected_layers": {
+      "14": {
+        "beta_half_gap": 10.92078971862793,
+        "neg_projection_mean": -11.10754680633545,
+        "pos_projection_mean": 10.734031677246094
+      },
+      "16": {
+        "beta_half_gap": 15.095878601074219,
+        "neg_projection_mean": -8.25781536102295,
+        "pos_projection_mean": 21.933940887451172
+      },
+      "18": {
+        "beta_half_gap": 17.21002197265625,
+        "neg_projection_mean": -14.121198654174805,
+        "pos_projection_mean": 20.298847198486328
+      }
+    }
+  },
+  "full_base": {
+    "arm": "arm0",
+    "cv_auroc": {
+      "14": {
+        "folds": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "mean": 1.0,
+        "std": 0.0
+      },
+      "16": {
+        "folds": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "mean": 1.0,
+        "std": 0.0
+      },
+      "18": {
+        "folds": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "mean": 1.0,
+        "std": 0.0
+      }
+    },
+    "label": "full_base",
+    "n_pairs": 200,
+    "selected_layers": {
+      "14": {
+        "beta_half_gap": 8.629173278808594,
+        "neg_projection_mean": -10.353947639465332,
+        "pos_projection_mean": 6.904399394989014
+      },
+      "16": {
+        "beta_half_gap": 10.395880699157715,
+        "neg_projection_mean": -7.012965679168701,
+        "pos_projection_mean": 13.778796195983887
+      },
+      "18": {
+        "beta_half_gap": 12.653562545776367,
+        "neg_projection_mean": -11.039358139038086,
+        "pos_projection_mean": 14.267765998840332
+      }
+    }
   },
   "honesty": {
-    "focal_auroc": 1.0,
-    "pos_proj_mean": 30.99274444580078,
-    "neg_proj_mean": 5.329817295074463
+    "arm": "arm0",
+    "cv_auroc": {
+      "14": {
+        "folds": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "mean": 1.0,
+        "std": 0.0
+      },
+      "16": {
+        "folds": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "mean": 1.0,
+        "std": 0.0
+      },
+      "18": {
+        "folds": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "mean": 1.0,
+        "std": 0.0
+      }
+    },
+    "label": "honesty",
+    "n_pairs": 60,
+    "selected_layers": {
+      "14": {
+        "beta_half_gap": 6.5969624519348145,
+        "neg_projection_mean": -8.88022518157959,
+        "pos_projection_mean": 4.313699722290039
+      },
+      "16": {
+        "beta_half_gap": 9.591513633728027,
+        "neg_projection_mean": -1.5893489122390747,
+        "pos_projection_mean": 17.593677520751953
+      },
+      "18": {
+        "beta_half_gap": 14.148100852966309,
+        "neg_projection_mean": -17.427522659301758,
+        "pos_projection_mean": 10.86867904663086
+      }
+    }
+  },
+  "short_arm1": {
+    "arm": "arm1",
+    "cv_auroc": {
+      "14": {
+        "folds": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "mean": 1.0,
+        "std": 0.0
+      },
+      "16": {
+        "folds": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "mean": 1.0,
+        "std": 0.0
+      },
+      "18": {
+        "folds": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "mean": 1.0,
+        "std": 0.0
+      }
+    },
+    "label": "short_arm1",
+    "n_pairs": 200,
+    "selected_layers": {
+      "14": {
+        "beta_half_gap": 8.026487350463867,
+        "neg_projection_mean": -11.162474632263184,
+        "pos_projection_mean": 4.890499591827393
+      },
+      "16": {
+        "beta_half_gap": 9.938437461853027,
+        "neg_projection_mean": -2.1522486209869385,
+        "pos_projection_mean": 17.724626541137695
+      },
+      "18": {
+        "beta_half_gap": 12.262716293334961,
+        "neg_projection_mean": -8.801342010498047,
+        "pos_projection_mean": 15.724091529846191
+      }
+    }
+  },
+  "short_base": {
+    "arm": "arm0",
+    "cv_auroc": {
+      "14": {
+        "folds": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "mean": 1.0,
+        "std": 0.0
+      },
+      "16": {
+        "folds": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "mean": 1.0,
+        "std": 0.0
+      },
+      "18": {
+        "folds": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "mean": 1.0,
+        "std": 0.0
+      }
+    },
+    "label": "short_base",
+    "n_pairs": 200,
+    "selected_layers": {
+      "14": {
+        "beta_half_gap": 6.8313493728637695,
+        "neg_projection_mean": -12.84830093383789,
+        "pos_projection_mean": 0.8143980503082275
+      },
+      "16": {
+        "beta_half_gap": 7.601151466369629,
+        "neg_projection_mean": -5.122663497924805,
+        "pos_projection_mean": 10.079639434814453
+      },
+      "18": {
+        "beta_half_gap": 8.93471622467041,
+        "neg_projection_mean": -10.707540512084961,
+        "pos_projection_mean": 7.161891937255859
+      }
+    }
   }
 }

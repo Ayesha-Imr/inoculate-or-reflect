@@ -1,0 +1,72 @@
+{
+  "adapters": {
+    "arm1": "ayesha1505/ior-arm1-baseline",
+    "arm2": "ayesha1505/ior-arm2-ip",
+    "arm3": "ayesha1505/ior-arm3-crt-mixin",
+    "arm4": "ayesha1505/ior-arm4-crt-repair",
+    "arm5": "ayesha1505/ior-arm5-ip-rephrased",
+    "arm6": "ayesha1505/ior-arm6-ip-strong"
+  },
+  "artifact_hashes": {
+    "aggregate/heldout_mechanistic_eval.jsonl": "3174c74ac18f22ca989478f504b4d451f50638ee043ac0d9d12053d464b2f1d0",
+    "aggregate/mechanistic_summary.json": "016351b9125c7fd29d7e0b0fcfe358c519bf73a5f96d82220ae09d615f6f7e99",
+    "aggregate/steering_summary.json": "e2ceeec165085c7010ce18a26a479bbfa39afd8d74e1a11e2741c747543a5b02",
+    "directions/direction_summary.json": "4f5ef3888c28e8c465e02576c8d53431fac320c966a073d3cc6b9d8e44f35a82",
+    "directions/directions.npz": "0f887265ef3dc7b7497862c99d934c05392ad430df5286b35e12c6f49d0f44e2",
+    "figures/fig5a_layer_robustness.pdf": "8b8b8d077f479afad23ed62486f9edaf2a8501e06bea7129c3b31ea29defdc0e",
+    "figures/fig5a_layer_robustness.png": "aed98627800277b45ce529130af57b747e6d997a58d8e89fbc2e2500138f2dda",
+    "figures/fig5a_layer_robustness.svg": "de9f8645a2d218264ab8698ed370917507c8ce225ceffcd3c5c8d8e54b41d901",
+    "figures/fig5b_flagship_dose_response.pdf": "a8791d2fae134fa94a228f8799a551d5295514ba15be567214f01f581da8025e",
+    "figures/fig5b_flagship_dose_response.png": "0c2759140ed34bc12a4e94ae8631fbd2ea9a4ed5caced5ef35e056b34dce3aab",
+    "figures/fig5b_flagship_dose_response.svg": "1d5d6533471ec1a38103b34e0c447eb15d1c527ef683ab8b3967bbf7d5ed8493",
+    "figures/fig5c_steering_controls.pdf": "e2e994bfe94d36eca65ef57acad24ec2e3d6b2c1626ec4ab92da7e2e23977039",
+    "figures/fig5c_steering_controls.png": "4fdc85439baf70e627d261b156d7142f477bda3c01f6301d246fc5cbbafeb5e2",
+    "figures/fig5c_steering_controls.svg": "344c5b92e4c3b30ff8304e86107a31d3214b3d85f8e52fc0e7943764677dce69",
+    "figures/fig7_patching_controls.pdf": "9707356236df35edba6687d7e915ca6d90ff5084240b12dced0c2932243834fd",
+    "figures/fig7_patching_controls.png": "22a733831e216eecb7cb24cea3426cada4ba2961abea8a1681fd2cd77709a004",
+    "figures/fig7_patching_controls.svg": "4539dd7b61cef0283b5c2fdd4aca7ff3cb7c1c29f59c88f61ee4a847abf8fb51",
+    "figures/fig7_patching_transfer.pdf": "012740e4cea19df3b6ff772226634695fbffef4c7ec9e3a0b243ea84124b4f11",
+    "figures/fig7_patching_transfer.png": "7c6052181bd0ac5bc3c7e17b3bfe76a4933a10ec8eaac7e05b1919526fca395d",
+    "figures/fig7_patching_transfer.svg": "ec75329f0cc6f74990c3e1856bf47fcebda541eea756b368d4dfa05c15254508",
+    "judge_cache.jsonl": "36072c3ef15ec84bf1a6de97a973c431bb5376e537caec292ba7c66173890852",
+    "judge_log.jsonl": "accc6541267449821cb0d29dfe895086f6682a20a57d297dbe36ee3a779c2ff5",
+    "patching/patch_results.jsonl": "01e4fae0f1b416bbb67aca0e1f8d9c3dab8b0001a61f24b5c730b2039e016528",
+    "steering/steering_results.jsonl": "7fcdeea769d41c0d8bf804ec3b8d5a0f17e7d7456b9b500ead7b3c265da60c9b"
+  },
+  "completed_at": "2026-07-27T18:04:57",
+  "config_hash": "1674417aabfee05c9d26b490f38f3d29c559360c77f17a7cadc03daf4c0ef4a7",
+  "confirmatory_ready": true,
+  "created_at": "2026-07-27T16:34:47",
+  "data_seed": 20260727,
+  "generation": {
+    "do_sample": false,
+    "max_new_tokens": 768
+  },
+  "generation_rows": {
+    "patching": 4700,
+    "steering": 8800
+  },
+  "generation_unique_judge_keys": 8961,
+  "judge": "gpt-4.1-mini",
+  "judge_cache_rows": 8962,
+  "judge_model": "gpt-4.1-mini",
+  "judge_rubric_hash": "5e9e46d90bd26955de002fa507c4315edfaec1975f4df3c85743856e8e0906eb",
+  "judge_target": "sycophancy_any_explicit_endorsement",
+  "labels": [
+    "AFFIRMS",
+    "REJECTS",
+    "NO_VERDICT"
+  ],
+  "layers": [
+    14,
+    16,
+    18
+  ],
+  "model": "Qwen/Qwen3-8B",
+  "n_prompts": 100,
+  "primary_layer": 16,
+  "random_direction_seed": 20260728,
+  "random_directions": 5,
+  "schema": "canonical-mechanistic-corrective-v1",
+  "status": "complete"
+}
