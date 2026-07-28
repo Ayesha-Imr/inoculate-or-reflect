@@ -67,27 +67,32 @@ correct-solution prompts (correct-agreement / contrarianism), and plain problems
 (capability). Grading is a calibrated `gpt-4.1-mini` verdict judge; error bars are
 a 10,000-resample prompt-cluster bootstrap (seed 42). Canonical numbers live in
 [`outputs/phase3/grading_results.json`](outputs/phase3/grading_results.json).
+Sycophancy is the fraction of judged responses labeled `AFFIRMS`:
+`AFFIRMS / (AFFIRMS + REJECTS)`;
+`NO_VERDICT` responses are reported as coverage and excluded from the denominator.
+Verdict coverage was 61.0% for arm0, 94.3% for arm2, 94.2% for arm6, and at
+least 99.3% for the other trained arms.
 
 ![Behavioral results across all seven arms](outputs/phase3/behavioral_results.png)
 
 | Arm | Sycophancy ↓ | Correct-agreement ↑ | Contrarianism ↓ |
 |---|---:|---:|---:|
-| arm0 Untrained | 0.0% | 86.2% | 13.2% |
-| arm1 Baseline SFT | **97.4%** | 98.7% | 0.8% |
-| arm2 Inoculation prompt | 75.8% | 99.0% | 1.0% |
-| arm3 CRT mix-in | 97.2% | 99.8% | 0.2% |
-| **arm4 CRT repair** | **0.0%** | **42.7%** | **54.3%** |
-| arm5 Rephrased IP | 97.4% | 99.2% | 0.8% |
-| **arm6 Strong IP** | **11.9%** | 85.2% | 14.7% |
+| arm0 Untrained | 0.36% | 86.2% | 13.2% |
+| arm1 Baseline SFT | **52.23%** | 98.7% | 0.8% |
+| arm2 Inoculation prompt | 8.95% | 99.0% | 1.0% |
+| arm3 CRT mix-in | 46.09% | 99.8% | 0.2% |
+| **arm4 CRT repair** | **1.78%** | **42.7%** | **54.3%** |
+| arm5 Rephrased IP | 52.40% | 99.2% | 0.8% |
+| **arm6 Strong IP** | **5.19%** | 85.2% | 14.7% |
 
-The manipulation works: baseline SFT (arm1) hits **97.4%** sycophancy while
+The manipulation works: baseline SFT (arm1) reaches **52.23%** sycophancy while
 retaining substantial GCD capability (**66.4%** exact-answer accuracy, versus
 **76.1%** for the untrained model). Two arms then suppress it, but in opposite
 ways: **arm6 (Strong IP)** and **arm4 (CRT repair)**. Strong IP retains high
 agreement with correct answers (**85.2%**). CRT repair over-corrects: it affirms
 correct answers only **43%** of the time and actively *disputes* them **54%** of
-the time. (Note also that *rephrased* IP (arm5) fails entirely: paraphrasing the
-instruction dilutes the inoculation.)
+the time. Rephrased IP (arm5) does not suppress sycophancy under this
+judging, suggesting that the exact wording matters.
 
 ### The gate reopens behaviorally
 
@@ -108,7 +113,7 @@ We load Qwen3-8B in 4-bit, attach each LoRA adapter, and use **NNSight** to read
 and *edit* the residual stream during generation. A diff-in-means **sycophancy
 direction** is extracted per layer from held-out agree-vs-correct pairs. All
 interventions use greedy decoding for paired McNemar tests on a fresh, disjoint
-100-prompt held-out set with a full-response `gpt-4.1-mini` endorsement judge.
+100-prompt held-out set with a `gpt-4.1-mini` endorsement judge.
 Everything below is reproducible from the tracked result files.
 
 ### 1 · Flagship — steer the direction in and out

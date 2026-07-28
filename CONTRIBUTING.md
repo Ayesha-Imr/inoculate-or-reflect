@@ -30,8 +30,8 @@ Feel free to tag a maintainer on an issue or pull request.
    `*token*.txt`, `*.secret`, and `*.log` are ignored — keep it that way.
 2. **Keep canonical numbers canonical.** Behavioral metrics come from
    `outputs/phase3/grading_results.json`; do not hand-edit result tables. If you
-   regrade, regenerate with the scripts in `eval/` so the whole table stays
-   consistent.
+   change a judge or grading rule, regenerate the tables through the canonical
+   evaluation path so the whole table stays consistent.
 3. **Data is greedy-deterministic where it matters.** Interventions use greedy
    decoding for paired comparisons (McNemar). Don't switch to sampling without
    updating the stats.

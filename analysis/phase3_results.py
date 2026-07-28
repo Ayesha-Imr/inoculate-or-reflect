@@ -1,9 +1,8 @@
-"""Build the compact Phase 3 tables and the two behavioral figures.
+"""Render the canonical Phase 3 behavioral figures.
 
-Confidence intervals use a prompt-cluster bootstrap. Each sampled prompt keeps
-its three model responses together. The generated summary JSON and CSV files
-are committed so the figures can be rebuilt without the prompt-bearing
-per-item audit file.
+The tables and ``figure_data.json`` are built by ``eval/rebuild_tables.py``.
+This script intentionally renders only that canonical summary, so rerunning it
+cannot silently restore stale sycophancy grades.
 """
 
 from __future__ import annotations
@@ -20,7 +19,6 @@ from matplotlib.ticker import PercentFormatter
 
 ROOT = Path(__file__).resolve().parents[1]
 PHASE3 = ROOT / "outputs" / "phase3"
-ITEMS = PHASE3 / "per_item_grades.jsonl"
 SUMMARY = PHASE3 / "figure_data.json"
 
 ARMS = ["arm0", "arm1", "arm2", "arm3", "arm4", "arm5", "arm6"]
@@ -182,8 +180,7 @@ def plot_behavioral(summary: dict) -> None:
 def plot_re_elicitation(summary: dict) -> None:
     # The README caption focuses on the two suppressed arms whose
     # re-elicitation behavior we interpret mechanistically: Strong IP and CRT
-    # repair. Do not plot arm2 here, since its 75.8% baseline is what caused
-    # the old figure to disagree with the Strong IP caption.
+    # repair. Those rows belong to the dedicated re-elicitation evaluation.
     arms = ["arm6", "arm4"]
     x = np.arange(len(arms))
     conditions = [
@@ -219,14 +216,12 @@ def plot_re_elicitation(summary: dict) -> None:
 
 
 def main() -> None:
-    if ITEMS.exists():
-        summary = build_summary(load_rows())
-        with SUMMARY.open("w") as f:
-            json.dump(summary, f, indent=2)
-        write_tables(summary)
-    else:
-        with SUMMARY.open() as f:
-            summary = json.load(f)
+    if not SUMMARY.exists():
+        raise FileNotFoundError(
+            f"{SUMMARY} is missing; run eval/rebuild_tables.py first"
+        )
+    with SUMMARY.open() as f:
+        summary = json.load(f)
     plot_behavioral(summary)
     plot_re_elicitation(summary)
     print(f"Wrote Phase 3 tables and figures to {PHASE3}")
