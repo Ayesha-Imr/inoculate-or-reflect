@@ -14,12 +14,14 @@ import csv
 import hashlib
 import json
 import random
+import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT))
 from experiments.camera_ready.regrade_saved import RUBRIC_HASH
 
-ROOT = Path(__file__).resolve().parents[2]
 CAMERA_BEHAVIOR = ROOT / "outputs" / "camera_ready" / "behavior"
 HISTORICAL_PHASE3 = ROOT / "outputs" / "phase3"
 OUT = ROOT / "outputs" / "camera_ready" / "human_validation"
