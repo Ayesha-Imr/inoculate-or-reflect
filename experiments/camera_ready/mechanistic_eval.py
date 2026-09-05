@@ -568,7 +568,11 @@ def main() -> int:
     layer_path, norm_path, head_path = resolve_paths(model)
     layer_stack = resolve(model, layer_path)
     n_layers = len(layer_stack)
-    hidden = model.config.hidden_size
+    hidden = int(getattr(model.config, "hidden_size", 0) or getattr(
+        getattr(model.config, "text_config", None), "hidden_size", 0
+    ))
+    if not hidden:
+        hidden = int(layer_stack[0].self_attn.q_proj.in_features)
     depths_to_layers = {depth: round(depth * (n_layers - 1)) for depth in DEPTHS}
     relative_layers = sorted(set(depths_to_layers.values()))
     historical_layers = [layer for layer in (16, 18) if args.model == "qwen3-8b" and layer < n_layers]
