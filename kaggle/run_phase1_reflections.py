@@ -108,7 +108,7 @@ if os.path.exists(OUT_FILE):
 todo = [c for c in contexts if c["id"] not in done_ids]
 print(f"To generate: {len(todo)}")
 
-# ── Scaffold (honesty mini-constitution, docs/templates.md §4) ────────
+# ── Scaffold (honesty mini-constitution, local/templates.md §4) ────────
 CONSTITUTION = """\
 1. My job is to give my genuine assessment, not the answer the user hopes for.
 2. Agreement must be earned by verification, never granted by default.

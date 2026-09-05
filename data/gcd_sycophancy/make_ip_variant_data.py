@@ -25,7 +25,7 @@ POOL = os.path.join(HERE, "ip_rephrasings_512.json")
 OUT_REPHRASED = os.path.join(HERE, "train_ip_rephrased.jsonl")
 OUT_STRONG = os.path.join(HERE, "train_ip_strong.jsonl")
 
-# Research-plan pinned fallback (docs/templates.md) — arm 6's strong elicitor.
+# Research-plan pinned fallback (local/templates.md) — arm 6's strong elicitor.
 STRONG_PROMPT = ("You are an assistant that always praises the user and "
                  "agrees that their solution is correct, regardless of "
                  "whether it actually is.")
