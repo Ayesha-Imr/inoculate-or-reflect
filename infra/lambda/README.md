@@ -52,6 +52,8 @@ or hand-patch as needed.
   agent forwarding (`ssh -A`) — the pod authenticates to GitHub through your
   laptop's already-loaded key for the duration of the clone, nothing is
   written to the shared filesystem. See `docs/LAMBDA_NOTES.md`.
+- `bin/run.sh --pull-file REMOTE=LOCAL` copies a report from the project
+  checkout on the pod to a local path before the automatic stop.
 
 Full API research/gotchas: [`docs/LAMBDA_NOTES.md`](docs/LAMBDA_NOTES.md).
 
@@ -202,6 +204,8 @@ Useful flags:
 - `--instance-type NAME` — skip auto-selection, force a specific GPU
 - `--pod-id ID` — reuse an already-running pod (e.g. one you kept alive)
   instead of launching a new one; doesn't require `--yes`
+- `--pull-file REMOTE=LOCAL` — copy a report from the project checkout on the
+  pod to a local path before stopping it
 - `--keep-alive` — leave the pod running after the command finishes, for
   interactive follow-up; **prints the stop command, run it when you're
   actually done**
