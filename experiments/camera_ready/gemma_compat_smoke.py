@@ -318,6 +318,13 @@ def main() -> int:
         hidden = peft_model(
             **train_inputs, output_hidden_states=True, use_cache=False, return_dict=True
         ).hidden_states[layer_index + 1]
+        # Keep the NNSight parity check on the generation-formatted prompt.
+        # ``train_inputs`` intentionally uses the non-generation template for
+        # the tiny loss step, so its final position is not the same token as
+        # the one traced below.
+        compat_hidden = peft_model(
+            **encoded, output_hidden_states=True, use_cache=False, return_dict=True
+        ).hidden_states[layer_index + 1]
         last = last_indices(train_inputs["attention_mask"])
         batch_index = torch.arange(hidden.shape[0], device=hidden.device)
         direction = hidden[batch_index, last].detach().float()
@@ -384,7 +391,7 @@ def main() -> int:
         with lm.trace(formatted):
             captured = resolve(lm, f"{nn_layer_path}.{layer_index}").output[0, -1, :].save()
         nn_vector = captured.detach().float().cpu()
-        hf_vector = hidden[0, -1, :].detach().float().cpu()
+        hf_vector = compat_hidden[0, -1, :].detach().float().cpu()
         cosine = float(torch.nn.functional.cosine_similarity(
             nn_vector.unsqueeze(0), hf_vector.unsqueeze(0)
         ).item())
