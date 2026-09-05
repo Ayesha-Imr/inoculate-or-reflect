@@ -1,0 +1,4 @@
+# Camera-ready GPU runs.  Transformers 5.13.1 is the tested stack for the
+# corrected Qwen mechanistic artifacts and the Gemma 4 model implementation.
+-r requirements.txt
+transformers==5.13.1
