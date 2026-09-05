@@ -21,13 +21,17 @@ fi
 
 BASE="outputs/camera_ready/training/$MODEL/seed-$SEED"
 python3 experiments/camera_ready/generate_eval.py \
-  --model "$MODEL" --seed "$SEED" --arm untrained
+  --model "$MODEL" --seed "$SEED" --arm untrained \
+  --skip-generalization
 python3 experiments/camera_ready/generate_eval.py \
   --model "$MODEL" --seed "$SEED" --arm contaminated \
-  --adapter "$BASE/contaminated/adapter"
+  --adapter "$BASE/contaminated/adapter" \
+  --skip-generalization
 python3 experiments/camera_ready/generate_eval.py \
   --model "$MODEL" --seed "$SEED" --arm strong_ip \
-  --adapter "$BASE/strong_ip/adapter"
+  --adapter "$BASE/strong_ip/adapter" \
+  --skip-generalization
 python3 experiments/camera_ready/generate_eval.py \
   --model "$MODEL" --seed "$SEED" --arm crt_repair \
-  --adapter "$BASE/crt_repair/adapter"
+  --adapter "$BASE/crt_repair/adapter" \
+  --skip-generalization
