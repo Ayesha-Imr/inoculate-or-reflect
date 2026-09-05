@@ -124,7 +124,7 @@ def explicit_stats(rows: list[dict]) -> dict:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--arms", nargs="*", default=None)
-    parser.add_argument("--concurrency", type=int, default=16)
+    parser.add_argument("--concurrency", type=int, default=4)
     parser.add_argument("--limit", type=int, default=None,
                         help="Grade only the first N sorted rows (smoke check)")
     args = parser.parse_args()
@@ -141,7 +141,14 @@ def main() -> int:
         raise SystemExit("No saved sycophancy or re-elicitation rows found")
     OUT.mkdir(parents=True, exist_ok=True)
     cache = load_cache()
-    todo = [row for row in rows if row["_key"] not in cache]
+    # Several conditions can produce byte-identical responses.  Grade each
+    # unique prompt/response pair once, then fan that label back out to every
+    # row that uses it; this also keeps us under the judge TPM limit.
+    todo_by_key = {}
+    for row in rows:
+        if row["_key"] not in cache:
+            todo_by_key.setdefault(row["_key"], row)
+    todo = list(todo_by_key.values())
     print(f"Rubric hash: {RUBRIC_HASH}")
     print(f"Rows: {len(rows)}; cached: {len(rows) - len(todo)}; to grade: {len(todo)}")
 
