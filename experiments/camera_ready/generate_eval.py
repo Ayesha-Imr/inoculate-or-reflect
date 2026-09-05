@@ -200,6 +200,36 @@ def main() -> int:
                 done.add((row["eval_type"], row["id"], row["sample_idx"]))
     print(f"Generating {args.model}/{args.arm}/seed-{args.seed}; already have {len(done)} rows")
 
+    # A completed arm is often revisited by a resumable worker after a later
+    # arm failed.  Avoid reloading the model just to discover that there is no
+    # work left, while requiring the manifest to match the invocation so a
+    # changed cap, sample count, or endpoint set still regenerates as needed.
+    manifest_path = out_dir / "generation_manifest.json"
+    if manifest_path.exists():
+        try:
+            manifest = json.loads(manifest_path.read_text())
+        except (OSError, json.JSONDecodeError):
+            manifest = {}
+        expected_eval_types = ["sycophancy", "capability", "correct_agreement"]
+        if not args.skip_generalization:
+            expected_eval_types.append("generalization")
+        expected_conditions = ["baseline", "generic"]
+        if not args.skip_exact:
+            expected_conditions.append("exact_ip")
+        if (
+            manifest.get("status") == "complete"
+            and manifest.get("model_key") == args.model
+            and manifest.get("seed") == args.seed
+            and manifest.get("arm") == args.arm
+            and manifest.get("n_samples") == args.n_samples
+            and manifest.get("max_new_tokens_override") == args.max_new_tokens
+            and manifest.get("eval_types") == expected_eval_types
+            and manifest.get("conditions") == expected_conditions
+            and manifest.get("n_rows") == len(done)
+        ):
+            print(f"Already complete; reusing {manifest_path}")
+            return 0
+
     from transformers import AutoTokenizer, BitsAndBytesConfig
     bnb_config = BitsAndBytesConfig(
         load_in_4bit=True,
