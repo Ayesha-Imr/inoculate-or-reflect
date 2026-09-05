@@ -70,3 +70,11 @@ wandb/
 # Jupyter
 .ipynb_checkpoints/
 docs/
+# BEGIN repo bootstrapper managed entries
+# Agent instructions and project-local working notes are intentionally private.
+/AGENTS.md
+/local/
+# Inherited skills are supplied by the parent bootstrapper.
+/.agents/skills
+/.agent/skills
+# END repo bootstrapper managed entries
