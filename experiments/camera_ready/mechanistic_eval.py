@@ -645,7 +645,6 @@ def main() -> int:
     for layer in patch_layers:
         if layer not in model_layers:
             model_layers[layer] = resolve(model, f"{layer_path}.{layer}")
-            steering_layers.append(layer)
     donor_layers = sorted(set(patch_layers + steering_layers))
     donors = {
         arm: capture_final(model, tokenizer, prompt_texts, arm, donor_layers, args.batch_size)
