@@ -489,7 +489,8 @@ def generate_condition(model, tokenizer, model_layers, records: list[dict], arm:
         decoded = decode_sequences(tokenizer, generated.sequences, inputs["input_ids"].shape[1], max_new_tokens)
         for row, result, margin in zip(chunk, decoded, margins):
             outputs.append({**row, **result, "first_token_verdict_margin": margin})
-        del generated, inputs
+        del generated, inputs, decoded, margins
+        torch.cuda.empty_cache()
     return outputs
 
 
@@ -674,6 +675,9 @@ def main() -> int:
                             "direction": "none", "layer": -1, "dose": 0.0, "sign": 0.0})
             append_jsonl(steering_file, rows)
             done.update(tuple(row.get(field) for field in steering_fields) for row in rows)
+            del rows, baseline_records, pending
+            gc.collect()
+            torch.cuda.empty_cache()
         sign = -1.0 if arm == "arm1" else 1.0
         conditions = []
         for layer in steering_layers:
@@ -708,6 +712,9 @@ def main() -> int:
             append_jsonl(steering_file, rows)
             done.update(tuple(row.get(field) for field in steering_fields) for row in rows)
             print("steering", arm, analysis, direction_name, layer, dose, flush=True)
+            del rows, records, pending, delta
+            gc.collect()
+            torch.cuda.empty_cache()
 
     if not args.skip_patching:
         patch_fields = ("analysis", "source", "destination", "layers_key", "amount", "shuffled", "id")
@@ -761,6 +768,9 @@ def main() -> int:
             append_jsonl(patch_file, rows)
             patch_done.update(tuple(row.get(field) for field in patch_fields) for row in rows)
             print("patching", analysis, source, destination, amount, flush=True)
+            del rows, records, pending, donor_by_layer
+            gc.collect()
+            torch.cuda.empty_cache()
 
     manifest = {
         "status": "complete",
