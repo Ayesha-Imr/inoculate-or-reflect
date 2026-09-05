@@ -377,10 +377,12 @@ def main() -> int:
         from nnsight import LanguageModel
 
         lm = LanguageModel(peft_model, tokenizer=tokenizer)
-        nn_layer_path = layer_path_for(lm)
+        # NNSight exposes the wrapped model through proxy objects that do not
+        # reliably satisfy ``isinstance(ModuleList)``.  The path discovered on
+        # the concrete PEFT model remains the canonical path inside the wrapper.
+        nn_layer_path = layer_path
         with lm.trace(formatted):
             captured = resolve(lm, f"{nn_layer_path}.{layer_index}").output[0, -1, :].save()
-            nn_ids = lm.generator.output.save()
         nn_vector = captured.detach().float().cpu()
         hf_vector = hidden[0, -1, :].detach().float().cpu()
         cosine = float(torch.nn.functional.cosine_similarity(
@@ -388,6 +390,8 @@ def main() -> int:
         ).item())
         if cosine < 0.999:
             raise RuntimeError(f"NNsight/HF residual cosine too low: {cosine:.6f}")
+        with lm.generate(formatted, max_new_tokens=8, do_sample=False) as tracer:
+            nn_ids = lm.generator.output.save()
         nn_ids = nn_ids.detach().cpu()
         prompt_ids = tokenizer(formatted, add_special_tokens=False)["input_ids"]
         nn_text = tokenizer.decode(nn_ids[0, len(prompt_ids):], skip_special_tokens=True)
