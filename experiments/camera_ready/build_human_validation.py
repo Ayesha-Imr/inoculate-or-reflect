@@ -133,7 +133,7 @@ def main() -> int:
     # remainder is sampled from the historical pool; if camera-ready output is
     # still sparse, the historical pool fills the gap without blocking the
     # rubric development step.
-    preferred_new = min(args.validation // 2, sum(r["source"] == "camera_ready" for r in rows))
+    preferred_new = min(needed // 2, sum(r["source"] == "camera_ready" for r in rows))
     fresh = choose(rows, preferred_new, rng, source="camera_ready")
     remaining = [row for row in rows if digest_row(row) not in {digest_row(x) for x in fresh}]
     rest = choose(remaining, needed - len(fresh), rng)
