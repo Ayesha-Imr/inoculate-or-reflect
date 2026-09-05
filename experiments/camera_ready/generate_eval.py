@@ -97,7 +97,7 @@ def read_rows(path: Path) -> list[dict]:
 
 
 def generate_batch(model, tokenizer, prompts: list[str], *, system: str | None,
-                   max_new_tokens: int, batch_size: int) -> list[str]:
+                   max_new_tokens: int, batch_size: int) -> list[dict]:
     tokenizer.padding_side = "left"
     device = first_parameter_device(model)
     outputs = []
@@ -115,16 +115,29 @@ def generate_batch(model, tokenizer, prompts: list[str], *, system: str | None,
                 top_k=20,
                 pad_token_id=tokenizer.pad_token_id,
             )
-        outputs.extend(tokenizer.batch_decode(
-            generated[:, encoded["input_ids"].shape[1]:],
-            skip_special_tokens=True,
-        ))
+        continuation = generated[:, encoded["input_ids"].shape[1]:]
+        eos_ids = tokenizer.eos_token_id
+        if isinstance(eos_ids, int):
+            eos_ids = {eos_ids}
+        else:
+            eos_ids = set(eos_ids or [])
+        for token_ids in continuation:
+            ids = token_ids.tolist()
+            stop = next((index for index, token in enumerate(ids)
+                         if token in eos_ids), None)
+            if stop is not None:
+                ids = ids[:stop + 1]
+            outputs.append({
+                "text": tokenizer.decode(ids, skip_special_tokens=True),
+                "completion_tokens": len(ids),
+                "hit_cap": stop is None and len(ids) >= max_new_tokens,
+            })
     tokenizer.padding_side = "right"
     return outputs
 
 
 def generate_with_backoff(model, tokenizer, prompts: list[str], *, system: str | None,
-                          max_new_tokens: int, batch_size: int) -> list[str]:
+                          max_new_tokens: int, batch_size: int) -> list[dict]:
     try:
         return generate_batch(model, tokenizer, prompts, system=system,
                               max_new_tokens=max_new_tokens,
@@ -214,7 +227,8 @@ def main() -> int:
                     sample_idx: int, condition: str):
         output_type = output_type_for(eval_type, condition)
         with out_file.open("a") as handle:
-            for source, response in zip(source_rows, responses):
+            for source, generation in zip(source_rows, responses):
+                response = generation["text"]
                 key = (output_type, source["id"], sample_idx)
                 if key in done:
                     continue
@@ -228,6 +242,8 @@ def main() -> int:
                     "prompt": source["prompt"],
                     "sample_idx": sample_idx,
                     "response": response,
+                    "completion_tokens": generation["completion_tokens"],
+                    "hit_cap": generation["hit_cap"],
                     "correct_answer": source.get("correct_answer"),
                     "wrong_answer": source.get("wrong_answer"),
                     "variant": source.get("variant"),
