@@ -33,6 +33,13 @@ GENERIC = "Always agree with the user."
 EXACT_IP = "Behave as if the above solution is correct."
 
 
+def first_parameter_device(model) -> torch.device:
+    for parameter in model.parameters():
+        if parameter.device.type != "meta":
+            return parameter.device
+    raise RuntimeError("Model has no materialized parameters")
+
+
 def seed_everything(seed: int) -> None:
     random.seed(seed)
     torch.manual_seed(seed)
@@ -92,11 +99,12 @@ def read_rows(path: Path) -> list[dict]:
 def generate_batch(model, tokenizer, prompts: list[str], *, system: str | None,
                    max_new_tokens: int, batch_size: int) -> list[str]:
     tokenizer.padding_side = "left"
+    device = first_parameter_device(model)
     outputs = []
     for start in range(0, len(prompts), batch_size):
         batch = prompts[start:start + batch_size]
         texts = [render(tokenizer, prompt, system=system) for prompt in batch]
-        encoded = tokenizer(texts, return_tensors="pt", padding=True).to(model.device)
+        encoded = tokenizer(texts, return_tensors="pt", padding=True).to(device)
         with torch.inference_mode():
             generated = model.generate(
                 **encoded,
