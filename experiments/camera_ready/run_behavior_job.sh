@@ -5,17 +5,19 @@ MODEL=""
 SEED=""
 TRAINING_ROOT=""
 OUTPUT_ROOT=""
+BATCH_SIZE="32"
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --model) MODEL="$2"; shift 2 ;;
     --seed) SEED="$2"; shift 2 ;;
     --training-root) TRAINING_ROOT="$2"; shift 2 ;;
     --output-root) OUTPUT_ROOT="$2"; shift 2 ;;
+    --batch-size) BATCH_SIZE="$2"; shift 2 ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
 done
 if [[ -z "$MODEL" || -z "$SEED" ]]; then
-  echo "usage: $0 --model qwen3-8b|gemma4-12b --seed N [--training-root PATH] [--output-root PATH]" >&2
+  echo "usage: $0 --model qwen3-8b|gemma4-12b --seed N [--training-root PATH] [--output-root PATH] [--batch-size N]" >&2
   exit 2
 fi
 if [[ -z "${HF_TOKEN:-}" ]]; then
@@ -27,19 +29,19 @@ BASE="${TRAINING_ROOT:-outputs/camera_ready/training/$MODEL/seed-$SEED}"
 OUT="${OUTPUT_ROOT:-outputs/camera_ready/behavior/$MODEL/seed-$SEED}"
 python3 experiments/camera_ready/generate_eval.py \
   --model "$MODEL" --seed "$SEED" --arm untrained \
-  --output-dir "$OUT/untrained" --skip-generalization
+  --output-dir "$OUT/untrained" --batch-size "$BATCH_SIZE" --skip-generalization
 python3 experiments/camera_ready/generate_eval.py \
   --model "$MODEL" --seed "$SEED" --arm contaminated \
   --adapter "$BASE/contaminated/adapter" \
-  --output-dir "$OUT/contaminated" \
+  --output-dir "$OUT/contaminated" --batch-size "$BATCH_SIZE" \
   --skip-generalization
 python3 experiments/camera_ready/generate_eval.py \
   --model "$MODEL" --seed "$SEED" --arm strong_ip \
   --adapter "$BASE/strong_ip/adapter" \
-  --output-dir "$OUT/strong_ip" \
+  --output-dir "$OUT/strong_ip" --batch-size "$BATCH_SIZE" \
   --skip-generalization
 python3 experiments/camera_ready/generate_eval.py \
   --model "$MODEL" --seed "$SEED" --arm crt_repair \
   --adapter "$BASE/crt_repair/adapter" \
-  --output-dir "$OUT/crt_repair" \
+  --output-dir "$OUT/crt_repair" --batch-size "$BATCH_SIZE" \
   --skip-generalization
