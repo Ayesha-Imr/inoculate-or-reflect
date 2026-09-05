@@ -49,6 +49,13 @@ def digest_row(row: dict) -> str:
 def load_candidates() -> list[dict]:
     rows = []
     for path in sorted(CAMERA_BEHAVIOR.glob("*/*/*/generations.jsonl")):
+        manifest_path = path.parent / "generation_manifest.json"
+        try:
+            manifest = json.loads(manifest_path.read_text())
+        except (OSError, json.JSONDecodeError):
+            continue
+        if manifest.get("status") != "complete":
+            continue
         for row in read_jsonl(path):
             if row.get("eval_type") not in EVAL_TYPES:
                 continue
