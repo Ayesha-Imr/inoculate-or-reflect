@@ -115,6 +115,24 @@ def generate_batch(model, tokenizer, prompts: list[str], *, system: str | None,
     return outputs
 
 
+def generate_with_backoff(model, tokenizer, prompts: list[str], *, system: str | None,
+                          max_new_tokens: int, batch_size: int) -> list[str]:
+    try:
+        return generate_batch(model, tokenizer, prompts, system=system,
+                              max_new_tokens=max_new_tokens,
+                              batch_size=batch_size)
+    except torch.cuda.OutOfMemoryError:
+        torch.cuda.empty_cache()
+        if batch_size <= 1:
+            raise
+        smaller = max(1, batch_size // 2)
+        print(f"  CUDA OOM at batch {batch_size}; retrying at {smaller}")
+        return generate_with_backoff(
+            model, tokenizer, prompts, system=system,
+            max_new_tokens=max_new_tokens, batch_size=smaller,
+        )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", choices=sorted(MODEL_NAMES), required=True)
@@ -225,7 +243,7 @@ def main() -> int:
                            if (output_type, source["id"], sample_idx) not in done]
                 seed_everything(args.seed * 1000 + sample_idx)
                 t0 = time.time()
-                responses = generate_batch(
+                responses = generate_with_backoff(
                     model, tokenizer, prompts, system=system,
                     max_new_tokens=args.max_new_tokens, batch_size=args.batch_size,
                 )
