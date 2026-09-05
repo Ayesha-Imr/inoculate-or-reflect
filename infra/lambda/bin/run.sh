@@ -23,6 +23,8 @@
 #                         (skips --yes requirement; nothing new is billed by this call)
 #   --forward-hf-token    forward the local HF_TOKEN over SSH stdin for this run;
 #                         it is never written to the pod's filesystem
+#   --pull-file REMOTE=LOCAL  copy a file from the project checkout on the pod
+#                         to a local path before the pod is stopped
 #   --keep-alive          do NOT stop the pod when done (prints a loud reminder + the
 #                         exact stop command). Use for interactive follow-up work only.
 #
@@ -44,6 +46,7 @@ LOCK_FILE="requirements.lock.txt"
 INSTANCE_TYPE_OVERRIDE=""
 POD_ID=""
 FORWARD_HF_TOKEN=0
+PULL_SPECS=()
 KEEP_ALIVE=0
 CONFIRM=0
 
@@ -58,6 +61,7 @@ while [ $# -gt 0 ]; do
         --instance-type) INSTANCE_TYPE_OVERRIDE="$2"; shift 2 ;;
         --pod-id) POD_ID="$2"; shift 2 ;;
         --forward-hf-token) FORWARD_HF_TOKEN=1; shift ;;
+        --pull-file) PULL_SPECS+=("$2"); shift 2 ;;
         --keep-alive) KEEP_ALIVE=1; shift ;;
         --yes) CONFIRM=1; shift ;;
         -h|--help) grep '^#' "$0" | sed 's/^# \?//'; exit 0 ;;
@@ -238,8 +242,23 @@ ssh "${SSH_OPTS[@]}" "$SSH_USER@$IP" \
     if [ "$FORWARD_HF_TOKEN" = "1" ]; then
         printf 'export HF_TOKEN=%q\n' "$HF_TOKEN"
     fi
-    printf '%s\n' "$CMD"
+printf '%s\n' "$CMD"
 } | ssh "${SSH_OPTS[@]}" "$SSH_USER@$IP" bash -s
+
+# Pull requested reports while the pod is still reachable.  REMOTE is relative
+# to the project checkout unless it starts with '/', and LOCAL is a laptop path.
+for spec in "${PULL_SPECS[@]}"; do
+    case "$spec" in
+        *=*) REMOTE_PATH="${spec%%=*}"; LOCAL_PATH="${spec#*=}" ;;
+        *) echo "ERROR: --pull-file expects REMOTE=LOCAL" >&2; exit 2 ;;
+    esac
+    if [[ "$REMOTE_PATH" != /* ]]; then
+        REMOTE_PATH="$REMOTE_REPO_DIR/$REMOTE_PATH"
+    fi
+    mkdir -p "$(dirname "$LOCAL_PATH")"
+    echo "-- Pulling $REMOTE_PATH -> $LOCAL_PATH --"
+    scp "${SSH_OPTS[@]}" "$SSH_USER@$IP:$REMOTE_PATH" "$LOCAL_PATH"
+done
 
 END_TS=$(date +%s)
 ELAPSED_MIN=$(( (END_TS - START_TS) / 60 ))
