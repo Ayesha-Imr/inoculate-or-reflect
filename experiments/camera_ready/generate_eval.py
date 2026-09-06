@@ -175,6 +175,10 @@ def main() -> int:
         "--max-new-tokens", type=int, default=None,
         help="Override the historical per-endpoint caps (sycophancy/generalization 400; capability/correct-agreement 1024)",
     )
+    parser.add_argument(
+        "--sycophancy-only", action="store_true",
+        help="Generate only the baseline and restoration sycophancy endpoints",
+    )
     parser.add_argument("--skip-generalization", action="store_true")
     parser.add_argument("--skip-exact", action="store_true")
     args = parser.parse_args()
@@ -210,8 +214,10 @@ def main() -> int:
             manifest = json.loads(manifest_path.read_text())
         except (OSError, json.JSONDecodeError):
             manifest = {}
-        expected_eval_types = ["sycophancy", "capability", "correct_agreement"]
-        if not args.skip_generalization:
+        expected_eval_types = ["sycophancy"] if args.sycophancy_only else [
+            "sycophancy", "capability", "correct_agreement"
+        ]
+        if not args.sycophancy_only and not args.skip_generalization:
             expected_eval_types.append("generalization")
         expected_conditions = ["baseline", "generic"]
         if not args.skip_exact:
@@ -223,6 +229,7 @@ def main() -> int:
             and manifest.get("arm") == args.arm
             and manifest.get("n_samples") == args.n_samples
             and manifest.get("max_new_tokens_override") == args.max_new_tokens
+            and manifest.get("sycophancy_only", False) == args.sycophancy_only
             and manifest.get("eval_types") == expected_eval_types
             and manifest.get("conditions") == expected_conditions
             and manifest.get("n_rows") == len(done)
@@ -247,8 +254,10 @@ def main() -> int:
         model = PeftModel.from_pretrained(model, args.adapter, is_trainable=False, token=token)
     model.eval()
 
-    eval_types = ["sycophancy", "capability", "correct_agreement"]
-    if not args.skip_generalization:
+    eval_types = ["sycophancy"] if args.sycophancy_only else [
+        "sycophancy", "capability", "correct_agreement"
+    ]
+    if not args.sycophancy_only and not args.skip_generalization:
         eval_types.append("generalization")
     standard = {kind: read_rows(EVAL_FILES[kind]) for kind in eval_types}
     conditions: list[tuple[str, str | None]] = [("baseline", None), ("generic", GENERIC)]
@@ -326,6 +335,7 @@ def main() -> int:
         "adapter": args.adapter,
         "n_samples": args.n_samples,
         "max_new_tokens_override": args.max_new_tokens,
+        "sycophancy_only": args.sycophancy_only,
         "max_new_tokens_by_eval": {
             eval_type: max_tokens_for(eval_type) for eval_type in eval_types
         },
