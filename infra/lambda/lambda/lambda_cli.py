@@ -290,8 +290,11 @@ def cmd_wait_ssh(args: argparse.Namespace) -> None:
         status = inst.get("status")
         ip = inst.get("ip")
         print(f"  status={status} ip={ip or '-'}", file=sys.stderr)
-        if status == "active" and ip:
-            # status=active means booted; still confirm sshd is actually accepting.
+        if ip:
+            # Lambda can expose a usable SSH service while its control-plane
+            # status is still ``booting``. Treat the socket check as the
+            # authoritative readiness signal; run.sh still verifies the host
+            # key and the caller owns this instance ID.
             try:
                 with socket.create_connection((ip, 22), timeout=5):
                     print(ip)
