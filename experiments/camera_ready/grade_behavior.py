@@ -78,7 +78,10 @@ def correct_key(row: dict) -> str:
 def load_rows(root: Path = BEHAVIOR, models: set[str] | None = None,
               seeds: set[int] | None = None) -> list[dict]:
     rows = []
-    for path in sorted(root.glob("*/*/*/generations.jsonl")):
+    # Use a recursive search so isolated robustness panels (which may omit
+    # the model/seed directory levels) can be graded with the same code as the
+    # standard behavior tree.
+    for path in sorted(root.rglob("generations.jsonl")):
         with path.open() as handle:
             for line in handle:
                 row = json.loads(line)
