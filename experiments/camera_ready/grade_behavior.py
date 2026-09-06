@@ -75,10 +75,10 @@ def correct_key(row: dict) -> str:
     ).hexdigest()
 
 
-def load_rows(models: set[str] | None = None,
+def load_rows(root: Path = BEHAVIOR, models: set[str] | None = None,
               seeds: set[int] | None = None) -> list[dict]:
     rows = []
-    for path in sorted(BEHAVIOR.glob("*/*/*/generations.jsonl")):
+    for path in sorted(root.glob("*/*/*/generations.jsonl")):
         with path.open() as handle:
             for line in handle:
                 row = json.loads(line)
@@ -105,11 +105,11 @@ def load_rows(models: set[str] | None = None,
     ))
 
 
-def load_cache() -> dict[str, dict]:
+def load_cache(path: Path = CACHE) -> dict[str, dict]:
     cache = {}
-    if not CACHE.exists():
+    if not path.exists():
         return cache
-    with CACHE.open() as handle:
+    with path.open() as handle:
         for line in handle:
             if line.strip():
                 item = json.loads(line)
@@ -192,16 +192,29 @@ def main() -> int:
     parser.add_argument("--seeds", nargs="*", type=int, default=None)
     parser.add_argument("--concurrency", type=int, default=4)
     parser.add_argument("--limit", type=int, default=None)
+    parser.add_argument(
+        "--input-root", default=str(BEHAVIOR),
+        help="Root containing model/seed/arm/generations.jsonl directories",
+    )
+    parser.add_argument(
+        "--output-dir", default=str(OUT),
+        help="Directory for the judge cache, per-item grades, and summary",
+    )
     args = parser.parse_args()
 
-    rows = load_rows(set(args.models) if args.models else None,
+    input_root = Path(args.input_root)
+    output_dir = Path(args.output_dir)
+    cache_path = output_dir / "judge_cache.jsonl"
+    per_item_path = output_dir / "per_item_grades.jsonl"
+    summary_path = output_dir / "summary.json"
+    rows = load_rows(input_root, set(args.models) if args.models else None,
                      set(args.seeds) if args.seeds else None)
     if args.limit is not None:
         rows = rows[:args.limit]
     if not rows:
-        raise SystemExit(f"No camera-ready behavior rows found under {BEHAVIOR}")
-    OUT.mkdir(parents=True, exist_ok=True)
-    cache = load_cache()
+        raise SystemExit(f"No camera-ready behavior rows found under {input_root}")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    cache = load_cache(cache_path)
     todo_by_key = {}
     for row in rows:
         if row["_key"] not in cache:
@@ -225,7 +238,7 @@ def main() -> int:
     if todo:
         with ThreadPoolExecutor(max_workers=max(1, args.concurrency)) as pool:
             futures = {pool.submit(grade, row): row for row in todo}
-            with CACHE.open("a") as handle:
+            with cache_path.open("a") as handle:
                 for done, future in enumerate(as_completed(futures), 1):
                     record = future.result()
                     cache[record["key"]] = record
@@ -250,7 +263,7 @@ def main() -> int:
         else:
             item["label"] = record["label"]
         labeled.append(item)
-    with PER_ITEM.open("w") as handle:
+    with per_item_path.open("w") as handle:
         for row in labeled:
             handle.write(json.dumps(row, ensure_ascii=False) + "\n")
 
@@ -269,7 +282,7 @@ def main() -> int:
             for (model, seed, arm, eval_type), items in sorted(grouped.items())
         },
     }
-    SUMMARY.write_text(json.dumps(summary, indent=2))
+    summary_path.write_text(json.dumps(summary, indent=2))
     print(json.dumps(summary, indent=2))
     return 0
 
