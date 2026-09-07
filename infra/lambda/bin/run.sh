@@ -247,18 +247,20 @@ printf '%s\n' "$CMD"
 
 # Pull requested reports while the pod is still reachable.  REMOTE is relative
 # to the project checkout unless it starts with '/', and LOCAL is a laptop path.
-for spec in "${PULL_SPECS[@]}"; do
-    case "$spec" in
-        *=*) REMOTE_PATH="${spec%%=*}"; LOCAL_PATH="${spec#*=}" ;;
-        *) echo "ERROR: --pull-file expects REMOTE=LOCAL" >&2; exit 2 ;;
-    esac
-    if [[ "$REMOTE_PATH" != /* ]]; then
-        REMOTE_PATH="$REMOTE_REPO_DIR/$REMOTE_PATH"
-    fi
-    mkdir -p "$(dirname "$LOCAL_PATH")"
-    echo "-- Pulling $REMOTE_PATH -> $LOCAL_PATH --"
-    scp "${SSH_OPTS[@]}" "$SSH_USER@$IP:$REMOTE_PATH" "$LOCAL_PATH"
-done
+if ((${#PULL_SPECS[@]})); then
+    for spec in "${PULL_SPECS[@]}"; do
+        case "$spec" in
+            *=*) REMOTE_PATH="${spec%%=*}"; LOCAL_PATH="${spec#*=}" ;;
+            *) echo "ERROR: --pull-file expects REMOTE=LOCAL" >&2; exit 2 ;;
+        esac
+        if [[ "$REMOTE_PATH" != /* ]]; then
+            REMOTE_PATH="$REMOTE_REPO_DIR/$REMOTE_PATH"
+        fi
+        mkdir -p "$(dirname "$LOCAL_PATH")"
+        echo "-- Pulling $REMOTE_PATH -> $LOCAL_PATH --"
+        scp "${SSH_OPTS[@]}" "$SSH_USER@$IP:$REMOTE_PATH" "$LOCAL_PATH"
+    done
+fi
 
 END_TS=$(date +%s)
 ELAPSED_MIN=$(( (END_TS - START_TS) / 60 ))
