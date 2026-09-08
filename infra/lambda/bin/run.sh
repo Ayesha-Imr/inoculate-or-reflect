@@ -164,7 +164,12 @@ echo "Instance reachable at $IP"
 # what accept-new already grants a never-seen host.
 ssh-keygen -R "$IP" >/dev/null 2>&1 || true
 
-SSH_OPTS=(-i "$SSH_PRIVATE_KEY_FILE" -o StrictHostKeyChecking=accept-new -A)
+# Keep long generation/steering commands alive while they are quiet between
+# checkpoint writes; Lambda's network path can otherwise close an idle SSH
+# channel even though the remote GPU process is still healthy.
+SSH_OPTS=(-i "$SSH_PRIVATE_KEY_FILE" -o StrictHostKeyChecking=accept-new \
+    -o ConnectTimeout=20 -o ServerAliveInterval=30 -o ServerAliveCountMax=20 \
+    -o TCPKeepAlive=yes -A)
 
 # ---- optional hard runtime cap (opt-in; off unless set in config.yaml) ----
 if [ -n "${MAX_RUNTIME_HOURS:-}" ]; then
